@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Property } from '@prisma/client'
 import { formatCurrency, formatPercent } from '@/lib/formatters'
-import { Building2, ArrowUpRight } from 'lucide-react'
+import { Building2, ArrowUpRight, SlidersHorizontal } from 'lucide-react'
+import { Select } from '@/components/ui/input'
 
 const NEIGHBORHOODS = ['All', 'Clairemont', 'North Park', 'University Heights', 'Normal Heights', 'City Heights', 'Hillcrest']
 
@@ -35,53 +36,113 @@ export function PropertyGrid({ properties }: { properties: Property[] }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Neighborhood</label>
-            <select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Filter Bar */}
+      <div className="filter-bar">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-muted)', alignSelf: 'center' }}>
+            <SlidersHorizontal size={13} />
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Filters</span>
+          </div>
+
+          <div className="form-field" style={{ gap: 4 }}>
+            <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>Neighborhood</label>
+            <Select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} style={{ width: 'auto' }}>
               {NEIGHBORHOODS.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
+            </Select>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Max Price ($)</label>
-            <input type="number" placeholder="2000000" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-36" />
+
+          <div className="form-field" style={{ gap: 4 }}>
+            <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>Max Price ($)</label>
+            <input
+              className="input"
+              type="number"
+              placeholder="2,000,000"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              style={{ width: 140 }}
+            />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Min Units</label>
-            <input type="number" placeholder="4" value={minUnits} onChange={e => setMinUnits(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-24" />
+
+          <div className="form-field" style={{ gap: 4 }}>
+            <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>Min Units</label>
+            <input
+              className="input"
+              type="number"
+              placeholder="4"
+              value={minUnits}
+              onChange={e => setMinUnits(e.target.value)}
+              style={{ width: 90 }}
+            />
           </div>
-          <p className="text-sm text-gray-500 self-end pb-2">Showing {filtered.length} of {properties.length}</p>
+
+          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginLeft: 'auto', alignSelf: 'center' }}>
+            {filtered.length} of {properties.length}
+          </p>
         </div>
       </div>
 
+      {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Building2 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No properties match your filters.</p>
+        <div className="card">
+          <div className="empty-state">
+            <div className="empty-state-icon"><Building2 size={22} /></div>
+            <p className="empty-state-title">No matches</p>
+            <p className="empty-state-desc">No properties match your current filters.</p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
           {filtered.map(p => (
-            <div key={p.id} className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{p.neighborhood}</p>
+            <div key={p.id} className="property-card">
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
+                  <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', letterSpacing: '-0.01em' }} className="truncate-line">
+                    {p.name}
+                  </h3>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{p.neighborhood}</p>
                 </div>
-                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">{p.units} units</span>
+                <span className="badge badge-brand" style={{ flexShrink: 0 }}>{p.units} units</span>
               </div>
-              {p.address && <p className="text-xs text-gray-400 mb-3">{p.address}</p>}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div><p className="text-xs text-gray-500">Asking Price</p><p className="text-sm font-semibold text-gray-900">{formatCurrency(p.askingPrice)}</p></div>
-                <div><p className="text-xs text-gray-500">Monthly Rent</p><p className="text-sm font-semibold text-gray-900">{formatCurrency(p.monthlyGrossRent)}</p></div>
-                <div><p className="text-xs text-gray-500">Vacancy</p><p className="text-sm text-gray-700">{formatPercent(p.vacancyRate)}</p></div>
-                <div><p className="text-xs text-gray-500">Exit Cap</p><p className="text-sm text-gray-700">{formatPercent(p.exitCapRate)}</p></div>
+
+              {p.address && (
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }} className="truncate-line">{p.address}</p>
+              )}
+
+              {/* Stats */}
+              <div className="property-stats-grid">
+                <div>
+                  <p className="property-stat-label">Asking Price</p>
+                  <p className="property-stat-value">{formatCurrency(p.askingPrice)}</p>
+                </div>
+                <div>
+                  <p className="property-stat-label">Monthly Rent</p>
+                  <p className="property-stat-value">{formatCurrency(p.monthlyGrossRent)}</p>
+                </div>
+                <div>
+                  <p className="property-stat-label">Vacancy</p>
+                  <p className="property-stat-value" style={{ fontWeight: 500 }}>{formatPercent(p.vacancyRate)}</p>
+                </div>
+                <div>
+                  <p className="property-stat-label">Exit Cap</p>
+                  <p className="property-stat-value" style={{ fontWeight: 500 }}>{formatPercent(p.exitCapRate)}</p>
+                </div>
               </div>
-              {p.notes && <p className="text-xs text-gray-500 italic mb-4 flex-1">{p.notes}</p>}
-              <button onClick={() => loadProperty(p)} className="mt-auto flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-                Analyze Deal <ArrowUpRight className="h-3.5 w-3.5" />
+
+              {p.notes && (
+                <p style={{ fontSize: 12, color: 'var(--color-text-3)', fontStyle: 'italic', marginBottom: 12, lineHeight: 1.5, flex: 1 }}>
+                  {p.notes}
+                </p>
+              )}
+
+              <button
+                onClick={() => loadProperty(p)}
+                className="btn btn-primary"
+                style={{ width: '100%', marginTop: 'auto' }}
+              >
+                Analyze Deal
+                <ArrowUpRight size={14} />
               </button>
             </div>
           ))}

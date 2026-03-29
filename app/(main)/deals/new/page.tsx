@@ -17,10 +17,13 @@ export default async function NewDealPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">New Deal Analysis</h1>
-        <p className="text-sm text-gray-500 mt-1">Enter deal assumptions to analyze returns</p>
+    <div className="fade-in">
+      <div className="page-header">
+        <div className="page-header-left">
+          <p className="page-eyebrow">New Deal</p>
+          <h1 className="page-title">Deal Analysis</h1>
+          <p className="page-description">Enter deal assumptions to model returns in real time</p>
+        </div>
       </div>
       <DealForm defaultValues={defaultValues} />
     </div>

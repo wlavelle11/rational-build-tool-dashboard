@@ -1,19 +1,22 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-
-export const dynamic = 'force-dynamic'
 import { analyzeDeal } from '@/lib/finance'
 import { formatCurrency, formatPercent, formatMultiple } from '@/lib/formatters'
-import { Plus, TrendingUp, Building2 } from 'lucide-react'
+import { Plus, Building2, TrendingUp, Star } from 'lucide-react'
+import { StatCard } from '@/components/ui/stat-card'
 
-function RecommendationBadge({ rec }: { rec: string }) {
-  const styles: Record<string, string> = {
-    'Strong Buy': 'bg-emerald-100 text-emerald-800',
-    'Caution': 'bg-amber-100 text-amber-800',
-    'Pass': 'bg-red-100 text-red-800',
+export const dynamic = 'force-dynamic'
+
+function RecBadge({ rec }: { rec: string }) {
+  const cfg: Record<string, { cls: string; dot: string }> = {
+    'Strong Buy': { cls: 'badge badge-success', dot: 'badge-dot' },
+    'Caution':    { cls: 'badge badge-warning', dot: 'badge-dot' },
+    'Pass':       { cls: 'badge badge-danger',  dot: 'badge-dot' },
   }
+  const c = cfg[rec] ?? { cls: 'badge badge-neutral', dot: 'badge-dot' }
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[rec] ?? 'bg-gray-100 text-gray-800'}`}>
+    <span className={c.cls}>
+      <span className={c.dot} />
       {rec}
     </span>
   )
@@ -22,7 +25,7 @@ function RecommendationBadge({ rec }: { rec: string }) {
 export default async function DashboardPage() {
   const deals = await prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } })
 
-  const dealsWithMetrics = deals.map((deal) => {
+  const analyzed = deals.map((deal) => {
     const metrics = analyzeDeal({
       purchasePrice: deal.purchasePrice,
       monthlyGrossRent: deal.monthlyGrossRent,
@@ -41,97 +44,132 @@ export default async function DashboardPage() {
     return { deal, metrics }
   })
 
-  const avgIRR = dealsWithMetrics.length > 0
-    ? dealsWithMetrics.reduce((s, d) => s + d.metrics.irr, 0) / dealsWithMetrics.length
+  const avgIRR = analyzed.length > 0
+    ? analyzed.reduce((s, d) => s + d.metrics.irr, 0) / analyzed.length
     : 0
+  const strongBuys = analyzed.filter(d => d.metrics.recommendation === 'Strong Buy').length
+  const totalValue = analyzed.reduce((s, d) => s + d.deal.purchasePrice, 0)
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Deal Pipeline</h1>
-          <p className="text-sm text-gray-500 mt-1">Multifamily acquisition analysis</p>
+    <div className="fade-in">
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <p className="page-eyebrow">Portfolio</p>
+          <h1 className="page-title">Deal Pipeline</h1>
+          <p className="page-description">Track and analyze your multifamily acquisition targets</p>
         </div>
-        <Link href="/deals/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-          <Plus className="h-4 w-4" />
+        <Link href="/deals/new" className="btn btn-primary">
+          <Plus size={15} />
           New Deal
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-md"><Building2 className="h-5 w-5 text-blue-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Total Deals</p>
-              <p className="text-2xl font-bold text-gray-900">{deals.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 rounded-md"><TrendingUp className="h-5 w-5 text-emerald-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Avg IRR</p>
-              <p className="text-2xl font-bold text-gray-900">{formatPercent(avgIRR)}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-50 rounded-md"><TrendingUp className="h-5 w-5 text-purple-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Strong Buys</p>
-              <p className="text-2xl font-bold text-gray-900">{dealsWithMetrics.filter(d => d.metrics.recommendation === 'Strong Buy').length}</p>
-            </div>
-          </div>
-        </div>
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <StatCard
+          label="Total Deals"
+          value={String(deals.length)}
+          sub="In pipeline"
+          icon={<Building2 size={16} />}
+        />
+        <StatCard
+          label="Avg IRR"
+          value={formatPercent(avgIRR)}
+          sub="Portfolio average"
+          trend={avgIRR >= 0.15 ? 'positive' : avgIRR >= 0.10 ? 'warning' : 'negative'}
+          icon={<TrendingUp size={16} />}
+        />
+        <StatCard
+          label="Strong Buys"
+          value={String(strongBuys)}
+          sub={`${deals.length > 0 ? Math.round((strongBuys / deals.length) * 100) : 0}% of pipeline`}
+          trend={strongBuys > 0 ? 'positive' : 'neutral'}
+          icon={<Star size={16} />}
+        />
+        <StatCard
+          label="Pipeline Value"
+          value={totalValue >= 1_000_000 ? `$${(totalValue / 1_000_000).toFixed(1)}M` : formatCurrency(totalValue)}
+          sub="Total acquisition cost"
+        />
       </div>
 
+      {/* Deals Table */}
       {deals.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No deals yet</h3>
-          <p className="text-gray-500 mb-6">Start by creating your first deal analysis.</p>
-          <Link href="/deals/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
-            <Plus className="h-4 w-4" />Create Deal
-          </Link>
+        <div className="card">
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <Building2 size={24} />
+            </div>
+            <p className="empty-state-title">No deals yet</p>
+            <p className="empty-state-desc">
+              Add your first deal to start building your pipeline and analyzing returns.
+            </p>
+            <Link href="/deals/new" className="btn btn-primary" style={{ marginTop: 8 }}>
+              <Plus size={15} />
+              Create your first deal
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Deal</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Units</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Price</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cap Rate</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">IRR</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">EM</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Rating</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Updated</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {dealsWithMetrics.map(({ deal, metrics }) => (
-                <tr key={deal.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/deals/${deal.id}`} className="hover:text-blue-600 transition-colors">
-                      <div className="font-medium text-gray-900">{deal.name}</div>
-                      <div className="text-xs text-gray-500">{deal.neighborhood}</div>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-4 text-right text-gray-700">{deal.units}</td>
-                  <td className="px-4 py-4 text-right text-gray-700">{formatCurrency(deal.purchasePrice)}</td>
-                  <td className="px-4 py-4 text-right text-gray-700">{formatPercent(metrics.year1CapRate)}</td>
-                  <td className="px-4 py-4 text-right font-medium text-gray-900">{formatPercent(metrics.irr)}</td>
-                  <td className="px-4 py-4 text-right text-gray-700">{formatMultiple(metrics.equityMultiple)}</td>
-                  <td className="px-4 py-4 text-center"><RecommendationBadge rec={metrics.recommendation} /></td>
-                  <td className="px-4 py-4 text-right text-gray-500 text-xs">{new Date(deal.updatedAt).toLocaleDateString()}</td>
+        <div className="data-table-wrapper">
+          <div className="data-table-header">
+            <div>
+              <p className="card-title">Active Deals</p>
+              <p className="card-subtitle">{deals.length} deal{deals.length !== 1 ? 's' : ''} in pipeline</p>
+            </div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Deal</th>
+                  <th>Units</th>
+                  <th>Price</th>
+                  <th>Cap Rate</th>
+                  <th>IRR</th>
+                  <th>EM</th>
+                  <th style={{ textAlign: 'center' }}>Rating</th>
+                  <th>Updated</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {analyzed.map(({ deal, metrics }) => (
+                  <tr key={deal.id}>
+                    <td>
+                      <Link
+                        href={`/deals/${deal.id}`}
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <div
+                          className="table-cell-primary truncate-line"
+                          style={{ transition: 'color 0.1s', cursor: 'pointer' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-brand)')}
+                          onMouseLeave={e => (e.currentTarget.style.color = '')}
+                        >
+                          {deal.name}
+                        </div>
+                        <div className="table-cell-muted" style={{ marginTop: 2 }}>
+                          {deal.neighborhood}
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="num">{deal.units}</td>
+                    <td className="num">{formatCurrency(deal.purchasePrice)}</td>
+                    <td className="num">{formatPercent(metrics.year1CapRate)}</td>
+                    <td className="num table-cell-primary">{formatPercent(metrics.irr)}</td>
+                    <td className="num">{formatMultiple(metrics.equityMultiple)}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <RecBadge rec={metrics.recommendation} />
+                    </td>
+                    <td className="num table-cell-muted">
+                      {new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

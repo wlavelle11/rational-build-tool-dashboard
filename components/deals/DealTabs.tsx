@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { MapPin } from 'lucide-react'
 import type { Deal } from '@prisma/client'
 import type { DealInputs, DealMetrics } from '@/lib/finance/types'
 import { DealForm } from './DealForm'
@@ -27,41 +28,50 @@ export function DealTabs({ deal, inputs, metrics }: Props) {
   const sensitivity = computeSensitivity(inputs)
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+    <div className="fade-in">
+      {/* Deal Header */}
+      <div className="deal-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{deal.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {deal.neighborhood} · {deal.units} units · {formatCurrency(deal.purchasePrice)}
-          </p>
+          <p className="page-eyebrow" style={{ marginBottom: 6 }}>Deal Analysis</p>
+          <h1 className="page-title">{deal.name}</h1>
+          <div className="deal-header-meta">
+            <span className="deal-header-pill">
+              <MapPin size={12} />
+              {deal.neighborhood}
+            </span>
+            <span className="deal-header-sep">·</span>
+            <span className="deal-header-pill">{deal.units} units</span>
+            <span className="deal-header-sep">·</span>
+            <span className="deal-header-pill">{formatCurrency(deal.purchasePrice)}</span>
+          </div>
         </div>
         <RecommendationBadge recommendation={metrics.recommendation} score={metrics.dealScore} />
       </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="flex">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
+      {/* Tabs */}
+      <div className="tabs-nav">
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
+      {/* Tab Content */}
       {activeTab === 'Overview' && (
-        <div className="space-y-8">
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <MetricsCards metrics={metrics} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">NOI Growth</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="chart-card">
+              <p className="chart-label">NOI Growth</p>
               <NOIChart proForma={metrics.proForma} />
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Annual Cash Flow</h3>
+            <div className="chart-card">
+              <p className="chart-label">Annual Cash Flow</p>
               <CashFlowChart proForma={metrics.proForma} />
             </div>
           </div>
@@ -69,38 +79,56 @@ export function DealTabs({ deal, inputs, metrics }: Props) {
       )}
 
       {activeTab === 'Pro Forma' && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <ProFormaTable proForma={metrics.proForma} exitValuation={metrics.exitValuation} holdPeriodYears={deal.holdPeriodYears} />
+        <div className="data-table-wrapper fade-in">
+          <div className="data-table-header">
+            <div>
+              <p className="card-title">Pro Forma Projections</p>
+              <p className="card-subtitle">{deal.holdPeriodYears}-year hold period</p>
+            </div>
+          </div>
+          <ProFormaTable
+            proForma={metrics.proForma}
+            exitValuation={metrics.exitValuation}
+            holdPeriodYears={deal.holdPeriodYears}
+          />
         </div>
       )}
 
       {activeTab === 'Sensitivity' && (
-        <SensitivityTables sensitivity={sensitivity} baseRentGrowth={inputs.annualRentGrowth} baseExitCap={inputs.exitCapRate} />
+        <div className="fade-in">
+          <SensitivityTables
+            sensitivity={sensitivity}
+            baseRentGrowth={inputs.annualRentGrowth}
+            baseExitCap={inputs.exitCapRate}
+          />
+        </div>
       )}
 
       {activeTab === 'Edit' && (
-        <DealForm
-          dealId={deal.id}
-          defaultValues={{
-            name: deal.name,
-            neighborhood: deal.neighborhood,
-            address: deal.address ?? '',
-            units: deal.units,
-            purchasePrice: deal.purchasePrice,
-            monthlyGrossRent: deal.monthlyGrossRent,
-            vacancyRate: deal.vacancyRate,
-            operatingExpenseRatio: deal.operatingExpenseRatio,
-            annualRentGrowth: deal.annualRentGrowth,
-            annualExpenseGrowth: deal.annualExpenseGrowth,
-            holdPeriodYears: deal.holdPeriodYears,
-            exitCapRate: deal.exitCapRate,
-            acquisitionClosingCosts: deal.acquisitionClosingCosts,
-            renovationCapex: deal.renovationCapex,
-            equityInvested: deal.equityInvested,
-            preferredReturnRate: deal.preferredReturnRate,
-            sponsorPromoteRate: deal.sponsorPromoteRate,
-          }}
-        />
+        <div className="fade-in">
+          <DealForm
+            dealId={deal.id}
+            defaultValues={{
+              name: deal.name,
+              neighborhood: deal.neighborhood,
+              address: deal.address ?? '',
+              units: deal.units,
+              purchasePrice: deal.purchasePrice,
+              monthlyGrossRent: deal.monthlyGrossRent,
+              vacancyRate: deal.vacancyRate,
+              operatingExpenseRatio: deal.operatingExpenseRatio,
+              annualRentGrowth: deal.annualRentGrowth,
+              annualExpenseGrowth: deal.annualExpenseGrowth,
+              holdPeriodYears: deal.holdPeriodYears,
+              exitCapRate: deal.exitCapRate,
+              acquisitionClosingCosts: deal.acquisitionClosingCosts,
+              renovationCapex: deal.renovationCapex,
+              equityInvested: deal.equityInvested,
+              preferredReturnRate: deal.preferredReturnRate,
+              sponsorPromoteRate: deal.sponsorPromoteRate,
+            }}
+          />
+        </div>
       )}
     </div>
   )
