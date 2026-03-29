@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Deal {
+  id                    String   @id @default(cuid())
+  name                  String
+  neighborhood          String
+  address               String?
+  units                 Int
+  purchasePrice         Float
+  monthlyGrossRent      Float
+  vacancyRate           Float
+  operatingExpenseRatio Float
+  annualRentGrowth      Float
+  annualExpenseGrowth   Float    @default(0.03)
+  holdPeriodYears       Int      @default(10)
+  exitCapRate           Float
+  acquisitionClosingCosts Float
+  renovationCapex       Float    @default(0)
+  equityInvested        Float
+  preferredReturnRate   Float    @default(0.06)
+  sponsorPromoteRate    Float    @default(0.30)
+  cachedIRR             Float?
+  cachedEquityMultiple  Float?
+  cachedCapRate         Float?
+  cachedScore           Float?
+  cachedRecommendation  String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Property {
+  id                    String   @id @default(cuid())
+  name                  String
+  neighborhood          String
+  address               String?
+  units                 Int
+  askingPrice           Float
+  monthlyGrossRent      Float
+  vacancyRate           Float    @default(0.05)
+  operatingExpenseRatio Float    @default(0.25)
+  annualRentGrowth      Float    @default(0.04)
+  annualExpenseGrowth   Float    @default(0.03)
+  exitCapRate           Float    @default(0.055)
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
