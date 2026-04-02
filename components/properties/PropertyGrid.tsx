@@ -32,7 +32,7 @@ export function PropertyGrid({ properties }: { properties: Property[] }) {
       equityInvested: String(Math.round(p.askingPrice * 1.03)),
       acquisitionClosingCosts: String(Math.round(p.askingPrice * 0.02)),
     })
-    router.push(`/deals/new?${params.toString()}`)
+    router.push(`/multifamily/new?${params.toString()}`)
   }
 
   return (

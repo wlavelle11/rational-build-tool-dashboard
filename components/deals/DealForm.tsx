@@ -97,7 +97,7 @@ export function DealForm({ defaultValues, dealId }: Props) {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
       if (!res.ok) throw new Error('Save failed')
       const deal = await res.json()
-      router.push(`/deals/${deal.id}`)
+      router.push(`/multifamily/${deal.id}`)
       router.refresh()
     } catch (err) {
       console.error(err)

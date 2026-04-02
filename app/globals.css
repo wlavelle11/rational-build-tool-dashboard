@@ -247,6 +247,10 @@ body {
   margin: 0 var(--space-2);
 }
 
+.dropdown-item:hover {
+  background: var(--color-surface-raised, var(--color-bg-subtle));
+}
+
 
 /* ============================================================
    BUTTONS

@@ -34,20 +34,129 @@ model Deal {
   updatedAt               DateTime @updatedAt
 }
 
-model Property {
-  id                      String   @id @default(cuid())
-  name                    String
-  neighborhood            String
-  address                 String?
-  units                   Int
-  askingPrice             Float
-  monthlyGrossRent        Float
-  vacancyRate             Float    @default(0.05)
-  operatingExpenseRatio   Float    @default(0.25)
-  annualRentGrowth        Float    @default(0.04)
-  annualExpenseGrowth     Float    @default(0.03)
-  exitCapRate             Float    @default(0.055)
-  notes                   String?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+model ADUProject {
+  id                     String   @id @default(cuid())
+  name                   String
+  neighborhood           String
+  address                String?
+  apn                    String?
+  purchasePrice          Float
+
+  // Feasibility inputs
+  lotSizeSqft            Float    @default(0)
+  existingCoverageSqft   Float    @default(0)
+  zoningCode             String   @default("")
+  setbackFront           Boolean  @default(false)
+  setbackRear            Boolean  @default(false)
+  setbackSide            Boolean  @default(false)
+  utilityWater           String   @default("adequate")
+  utilitySewer           String   @default("adequate")
+  hasHOA                 Boolean  @default(false)
+  permitTimelineMonths   Int      @default(6)
+  permitCostEstimate     Float    @default(15000)
+
+  // Financial analysis inputs
+  aduCount               Int      @default(4)
+  constructionCost       Float    @default(600000)
+  marketRateUnits        Int      @default(2)
+  middleIncomeUnits      Int      @default(2)
+  marketRateRent         Float    @default(2400)
+  middleIncomeRent       Float    @default(1900)
+  vacancyRate            Float    @default(0.05)
+  opExpRatio             Float    @default(0.30)
+  annualRentGrowth       Float    @default(0.055)
+  holdPeriodYears        Int      @default(10)
+  exitCapRate            Float    @default(0.05)
+  equityInvested         Float    @default(1800000)
+  preferredReturnRate    Float    @default(0.06)
+  sponsorSplit           Float    @default(0.70)
+
+  // Cached metrics
+  cachedFeasibilityScore Float?
+  cachedFeasibilityFlag  String?
+  cachedIRR              Float?
+  cachedEquityMultiple   Float?
+  cachedRecommendation   String?
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
+
+model Lead {
+  id           String   @id @default(cuid())
+  address      String   @unique
+  zipCode      String?
+  leadType     String?
+  tab          String   // NOD | Auction | Listed | Archived
+  distressType String?
+  filingDate   String?
+  estValue     Float?
+  loanAmount   Float?
+  equity       Float?
+  equityPct    Float?
+  yearBuilt    String?
+  beds         String?
+  baths        String?
+  sqft         String?
+  score        Int      @default(0)
+  status       String?
+  sources      String?
+  priority     Boolean  @default(false)
+  notes        String?
+  firstSeen    String?
+  lastSeen     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ResidentialProject {
+  id                    String   @id @default(cuid())
+  name                  String
+  neighborhood          String
+  address               String?
+
+  // Shared property inputs
+  purchasePrice         Float
+  renovationBudget      Float
+  arv                   Float
+  buyClosingCosts       Float
+
+  // Flip inputs
+  flipInvestorCapital   Float
+  flipHoldMonths        Int
+  flipMonthlyCarrying   Float
+  flipSellClosingPct    Float    @default(0.07)
+  flipFinancingType     String   @default("cash")
+  flipHardMoneyLtvPct   Float?
+  flipHardMoneyRate     Float?
+  flipHardMoneyPoints   Float?
+
+  // BRRR inputs
+  brrrInvestorCapital   Float
+  brrrHoldYears         Int      @default(10)
+  brrrMonthlyRent       Float
+  brrrOpExpRatio        Float    @default(0.35)
+  brrrReservePct        Float    @default(0.05)
+  brrrRefinanceLtv      Float    @default(0.75)
+  brrrRefinanceRate     Float    @default(0.07)
+  brrrRefinanceTerm     Int      @default(30)
+  brrrTargetYield       Float    @default(0.08)
+  brrrEquitySplit       Float    @default(0.50)
+  brrrFinancingType     String   @default("cash")
+  brrrHardMoneyLtvPct   Float?
+  brrrHardMoneyRate     Float?
+  brrrHardMoneyPoints   Float?
+  brrrRenovationMonths  Int?
+
+  // Cached metrics
+  cachedFlipScore       Float?
+  cachedFlipRec         String?
+  cachedFlipROI         Float?
+  cachedBrrrScore       Float?
+  cachedBrrrRec         String?
+  cachedBrrrYield       Float?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+

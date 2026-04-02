@@ -1,159 +1,219 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { analyzeDeal } from '@/lib/finance'
-import { formatCurrency, formatPercent, formatMultiple } from '@/lib/formatters'
-import { Plus, Building2, TrendingUp, Star } from 'lucide-react'
+import { calculateFlip } from '@/lib/finance/flip'
+import { calculateBRRR } from '@/lib/finance/brrr'
+import { formatCurrency, formatPercent } from '@/lib/formatters'
+import { Building2, Home, Plus, ArrowRight, TrendingUp, Briefcase, Hammer } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 
 export const dynamic = 'force-dynamic'
 
 function RecBadge({ rec }: { rec: string }) {
-  const cfg: Record<string, { cls: string; dot: string }> = {
-    'Strong Buy': { cls: 'badge badge-success', dot: 'badge-dot' },
-    'Caution':    { cls: 'badge badge-warning', dot: 'badge-dot' },
-    'Pass':       { cls: 'badge badge-danger',  dot: 'badge-dot' },
+  const cfg: Record<string, string> = {
+    'Strong Buy': 'badge badge-success',
+    'Caution':    'badge badge-warning',
+    'Pass':       'badge badge-danger',
   }
-  const c = cfg[rec] ?? { cls: 'badge badge-neutral', dot: 'badge-dot' }
   return (
-    <span className={c.cls}>
-      <span className={c.dot} />
+    <span className={cfg[rec] ?? 'badge badge-neutral'}>
+      <span className="badge-dot" />
       {rec}
     </span>
   )
 }
 
-export default async function DashboardPage() {
-  const deals = await prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } })
+function StrategyCard({ title, description, href, icon, count, ctaLabel }: {
+  title: string
+  description: string
+  href: string
+  icon: React.ReactNode
+  count: number
+  ctaLabel: string
+}) {
+  return (
+    <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 10,
+          background: 'var(--color-surface-raised)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--color-brand)',
+        }}>
+          {icon}
+        </div>
+        <div>
+          <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{description}</p>
+        </div>
+      </div>
+      <p style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        {count} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-tertiary)' }}>project{count !== 1 ? 's' : ''}</span>
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+        <Link href={href} className="btn btn-primary" style={{ flex: 1 }}>
+          View Portfolio
+          <ArrowRight size={14} />
+        </Link>
+        <Link href={`${href}/new`} className="btn btn-outline" style={{ flexShrink: 0 }}>
+          <Plus size={14} />
+          {ctaLabel}
+        </Link>
+      </div>
+    </div>
+  )
+}
 
-  const analyzed = deals.map((deal) => {
+export default async function HomePage() {
+  const [deals, residentialProjects, aduProjects] = await Promise.all([
+    prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } }),
+    prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } }),
+    prisma.aDUProject.findMany({ orderBy: { updatedAt: 'desc' } }),
+  ])
+
+  // Analyze multifamily deals
+  const analyzedDeals = deals.map((deal) => {
     const metrics = analyzeDeal({
-      purchasePrice: deal.purchasePrice,
-      monthlyGrossRent: deal.monthlyGrossRent,
-      vacancyRate: deal.vacancyRate,
-      operatingExpenseRatio: deal.operatingExpenseRatio,
-      annualRentGrowth: deal.annualRentGrowth,
-      annualExpenseGrowth: deal.annualExpenseGrowth,
-      holdPeriodYears: deal.holdPeriodYears,
-      exitCapRate: deal.exitCapRate,
-      acquisitionClosingCosts: deal.acquisitionClosingCosts,
-      renovationCapex: deal.renovationCapex,
-      equityInvested: deal.equityInvested,
-      preferredReturnRate: deal.preferredReturnRate,
+      purchasePrice: deal.purchasePrice, monthlyGrossRent: deal.monthlyGrossRent,
+      vacancyRate: deal.vacancyRate, operatingExpenseRatio: deal.operatingExpenseRatio,
+      annualRentGrowth: deal.annualRentGrowth, annualExpenseGrowth: deal.annualExpenseGrowth,
+      holdPeriodYears: deal.holdPeriodYears, exitCapRate: deal.exitCapRate,
+      acquisitionClosingCosts: deal.acquisitionClosingCosts, renovationCapex: deal.renovationCapex,
+      equityInvested: deal.equityInvested, preferredReturnRate: deal.preferredReturnRate,
       sponsorPromoteRate: deal.sponsorPromoteRate,
     })
-    return { deal, metrics }
+    return { type: 'multifamily' as const, name: deal.name, neighborhood: deal.neighborhood, price: deal.purchasePrice, recommendation: metrics.recommendation, updatedAt: deal.updatedAt, href: `/multifamily/${deal.id}` }
   })
 
-  const avgIRR = analyzed.length > 0
-    ? analyzed.reduce((s, d) => s + d.metrics.irr, 0) / analyzed.length
-    : 0
-  const strongBuys = analyzed.filter(d => d.metrics.recommendation === 'Strong Buy').length
-  const totalValue = analyzed.reduce((s, d) => s + d.deal.purchasePrice, 0)
+  // Analyze residential projects
+  const analyzedResidential = residentialProjects.map((p) => {
+    const flip = calculateFlip({
+      purchasePrice: p.purchasePrice, renovationBudget: p.renovationBudget, arv: p.arv,
+      holdPeriodMonths: p.flipHoldMonths, buyClosingCosts: p.buyClosingCosts,
+      sellClosingCostsPct: p.flipSellClosingPct, investorCapital: p.flipInvestorCapital,
+      monthlyCarryingCosts: p.flipMonthlyCarrying,
+      financingType: p.flipFinancingType as 'cash' | 'hard_money',
+      hardMoneyLtvPct: p.flipHardMoneyLtvPct ?? undefined,
+      hardMoneyRate: p.flipHardMoneyRate ?? undefined,
+      hardMoneyPoints: p.flipHardMoneyPoints ?? undefined,
+    })
+    return { type: 'residential' as const, name: p.name, neighborhood: p.neighborhood, price: p.purchasePrice, recommendation: flip.recommendation, updatedAt: p.updatedAt, href: '/residential' }
+  })
+
+  const analyzedADU = aduProjects.map((p) => ({
+    type: 'adu' as const, name: p.name, neighborhood: p.neighborhood, price: p.purchasePrice + p.constructionCost,
+    recommendation: (p.cachedRecommendation ?? 'Pass') as string, updatedAt: p.updatedAt, href: '/adu',
+  }))
+
+  // Combined recent activity
+  const recentActivity = [...analyzedDeals, ...analyzedResidential, ...analyzedADU]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 10)
+
+  const totalProjects = deals.length + residentialProjects.length + aduProjects.length
+  const totalValue = deals.reduce((s, d) => s + d.purchasePrice, 0) + residentialProjects.reduce((s, p) => s + p.purchasePrice, 0) + aduProjects.reduce((s, p) => s + p.purchasePrice + p.constructionCost, 0)
+  const totalStrategies = (deals.length > 0 ? 1 : 0) + (residentialProjects.length > 0 ? 1 : 0) + (aduProjects.length > 0 ? 1 : 0)
 
   return (
     <div className="fade-in">
       {/* Page Header */}
       <div className="page-header">
         <div className="page-header-left">
-          <p className="page-eyebrow">Portfolio</p>
-          <h1 className="page-title">Deal Pipeline</h1>
-          <p className="page-description">Track and analyze your multifamily acquisition targets</p>
+          <p className="page-eyebrow">Rational Build</p>
+          <h1 className="page-title">Investment Dashboard</h1>
+          <p className="page-description">All investment strategies at a glance</p>
         </div>
-        <Link href="/deals/new" className="btn btn-primary">
-          <Plus size={15} />
-          New Deal
-        </Link>
       </div>
 
-      {/* Stats Row */}
+      {/* Aggregate Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
         <StatCard
-          label="Total Deals"
-          value={String(deals.length)}
-          sub="In pipeline"
-          icon={<Building2 size={16} />}
+          label="Total Projects"
+          value={String(totalProjects)}
+          sub="Across all strategies"
+          icon={<Briefcase size={16} />}
         />
         <StatCard
-          label="Avg IRR"
-          value={formatPercent(avgIRR)}
-          sub="Portfolio average"
-          trend={avgIRR >= 0.15 ? 'positive' : avgIRR >= 0.10 ? 'warning' : 'negative'}
+          label="Active Strategies"
+          value={String(totalStrategies)}
+          sub="Multifamily, Residential"
           icon={<TrendingUp size={16} />}
         />
         <StatCard
-          label="Strong Buys"
-          value={String(strongBuys)}
-          sub={`${deals.length > 0 ? Math.round((strongBuys / deals.length) * 100) : 0}% of pipeline`}
-          trend={strongBuys > 0 ? 'positive' : 'neutral'}
-          icon={<Star size={16} />}
-        />
-        <StatCard
-          label="Pipeline Value"
+          label="Portfolio Value"
           value={totalValue >= 1_000_000 ? `$${(totalValue / 1_000_000).toFixed(1)}M` : formatCurrency(totalValue)}
           sub="Total acquisition cost"
         />
       </div>
 
-      {/* Deals Table */}
-      {deals.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="empty-state-icon">
-              <Building2 size={24} />
-            </div>
-            <p className="empty-state-title">No deals yet</p>
-            <p className="empty-state-desc">
-              Add your first deal to start building your pipeline and analyzing returns.
-            </p>
-            <Link href="/deals/new" className="btn btn-primary" style={{ marginTop: 8 }}>
-              <Plus size={15} />
-              Create your first deal
-            </Link>
-          </div>
-        </div>
-      ) : (
+      {/* Strategy Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 32 }}>
+        <StrategyCard
+          title="Multifamily"
+          description="Apartment buildings & multi-unit properties"
+          href="/multifamily"
+          icon={<Building2 size={20} />}
+          count={deals.length}
+          ctaLabel="New Analysis"
+        />
+        <StrategyCard
+          title="Residential Flip & BRRR"
+          description="Single family flip vs buy-renovate-rent-refinance"
+          href="/residential"
+          icon={<Home size={20} />}
+          count={residentialProjects.length}
+          ctaLabel="New Analysis"
+        />
+        <StrategyCard
+          title="ADU Development"
+          description="San Diego Bonus ADU — feasibility + 10-year model"
+          href="/adu"
+          icon={<Hammer size={20} />}
+          count={aduProjects.length}
+          ctaLabel="New Analysis"
+        />
+      </div>
+
+      {/* Recent Activity Table */}
+      {recentActivity.length > 0 && (
         <div className="data-table-wrapper">
           <div className="data-table-header">
             <div>
-              <p className="card-title">Active Deals</p>
-              <p className="card-subtitle">{deals.length} deal{deals.length !== 1 ? 's' : ''} in pipeline</p>
+              <p className="card-title">Recent Activity</p>
+              <p className="card-subtitle">Latest projects across all strategies</p>
             </div>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Deal</th>
-                  <th>Units</th>
+                  <th>Project</th>
+                  <th>Strategy</th>
                   <th>Price</th>
-                  <th>Cap Rate</th>
-                  <th>IRR</th>
-                  <th>EM</th>
                   <th style={{ textAlign: 'center' }}>Rating</th>
                   <th>Updated</th>
                 </tr>
               </thead>
               <tbody>
-                {analyzed.map(({ deal, metrics }) => (
-                  <tr key={deal.id}>
+                {recentActivity.map((item, i) => (
+                  <tr key={`${item.type}-${i}`}>
                     <td>
-                      <Link href={`/deals/${deal.id}`} className="deal-row-link">
-                        <div className="deal-row-name truncate-line">{deal.name}</div>
-                        <div className="table-cell-muted" style={{ marginTop: 2 }}>
-                          {deal.neighborhood}
-                        </div>
+                      <Link href={item.href} className="deal-row-link">
+                        <div className="deal-row-name truncate-line">{item.name}</div>
+                        <div className="table-cell-muted" style={{ marginTop: 2 }}>{item.neighborhood}</div>
                       </Link>
                     </td>
-                    <td className="num">{deal.units}</td>
-                    <td className="num">{formatCurrency(deal.purchasePrice)}</td>
-                    <td className="num">{formatPercent(metrics.year1CapRate)}</td>
-                    <td className="num table-cell-primary">{formatPercent(metrics.irr)}</td>
-                    <td className="num">{formatMultiple(metrics.equityMultiple)}</td>
+                    <td>
+                      <span className="badge" style={{ textTransform: 'capitalize' }}>
+                        {item.type === 'multifamily' ? 'Multifamily' : item.type === 'residential' ? 'Flip / BRRR' : 'ADU'}
+                      </span>
+                    </td>
+                    <td className="num">{formatCurrency(item.price)}</td>
                     <td style={{ textAlign: 'center' }}>
-                      <RecBadge rec={metrics.recommendation} />
+                      <RecBadge rec={item.recommendation} />
                     </td>
                     <td className="num table-cell-muted">
-                      {new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
+                      {new Date(item.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                     </td>
                   </tr>
                 ))}
