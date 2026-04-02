@@ -153,3 +153,5 @@ prisma/
 ## Related Repos
 
 - **[Rational-Pipeline](https://github.com/wlavelle11/Rational-Pipeline)** — Python scraper that generates and scores property leads, feeding this dashboard's Leads tab.
+
+**This repo:** `https://github.com/wlavelle11/rational-build-tool-dashboard`
