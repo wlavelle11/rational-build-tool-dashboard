@@ -2,14 +2,15 @@ import { ResidentialForm } from '@/components/residential/ResidentialForm'
 
 export const dynamic = 'force-dynamic'
 
-export default function NewResidentialPage({
+export default async function NewResidentialPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const address       = typeof searchParams.address       === 'string' ? searchParams.address       : undefined
-  const purchasePrice = typeof searchParams.purchasePrice === 'string' ? Number(searchParams.purchasePrice) : undefined
-  const name          = typeof searchParams.name          === 'string' ? searchParams.name          : undefined
+  const params = await searchParams
+  const address       = typeof params.address       === 'string' ? params.address       : undefined
+  const purchasePrice = typeof params.purchasePrice === 'string' ? Number(params.purchasePrice) : undefined
+  const name          = typeof params.name          === 'string' ? params.name          : undefined
 
   const defaultValues = (address || purchasePrice || name)
     ? { address, name, purchasePrice: purchasePrice && !isNaN(purchasePrice) ? purchasePrice : undefined }

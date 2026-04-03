@@ -55,9 +55,10 @@ function PropertyPhoto({ url, address }: { url: string | null; address: string }
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const activeTab: Tab = TABS.includes(searchParams.tab as Tab) ? (searchParams.tab as Tab) : 'NOD'
+  const params = await searchParams
+  const activeTab: Tab = TABS.includes(params.tab as Tab) ? (params.tab as Tab) : 'NOD'
 
   const [allLeads, tabLeads] = await Promise.all([
     prisma.lead.findMany({ select: { tab: true, score: true, priority: true } }),
