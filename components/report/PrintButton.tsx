@@ -4,47 +4,32 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ArrowLeft, Download, Loader2 } from 'lucide-react'
 
-export function PrintButton({ backHref }: { backHref: string }) {
+interface PrintButtonProps {
+  backHref: string
+  type: 'residential' | 'adu' | 'multifamily'
+  id: string
+}
+
+export function PrintButton({ backHref, type, id }: PrintButtonProps) {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF } = await import('jspdf')
+      const res = await fetch(`/api/report/${type}/${id}`)
+      if (!res.ok) throw new Error('PDF generation failed')
 
-      const el = document.getElementById('report-content')
-      if (!el) return
-
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      })
-
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth
-      const imgHeight = (canvas.height * pageWidth) / canvas.width
-      let yOffset = 0
-      let remainingHeight = imgHeight
-
-      // Paginate if content is taller than one page
-      while (remainingHeight > 0) {
-        pdf.addImage(imgData, 'PNG', 0, -yOffset, imgWidth, imgHeight)
-        remainingHeight -= pageHeight
-        if (remainingHeight > 0) {
-          pdf.addPage()
-          yOffset += pageHeight
-        }
-      }
-
-      // Derive filename from the h1 on the page
-      const title = el.querySelector('h1')?.textContent ?? 'Investor-Report'
-      pdf.save(`${title.replace(/[^a-z0-9]/gi, '-')}-Investor-Report.pdf`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const match = disposition.match(/filename="([^"]+)"/)
+      a.download = match ? match[1] : 'Investor-Report.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } finally {
       setSaving(false)
     }

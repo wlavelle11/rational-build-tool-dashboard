@@ -35,7 +35,7 @@ export default async function ADUReportPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="report-page">
-      <PrintButton backHref={`/adu/${id}`} />
+      <PrintButton type="adu" id={id} backHref={`/adu/${id}`} />
 
       <div className="report-body" id="report-content">
         {/* Header */}

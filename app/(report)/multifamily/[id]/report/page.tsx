@@ -29,7 +29,7 @@ export default async function MultifamilyReportPage({ params }: { params: Promis
 
   return (
     <div className="report-page">
-      <PrintButton backHref={`/multifamily/${id}`} />
+      <PrintButton type="multifamily" id={id} backHref={`/multifamily/${id}`} />
 
       <div className="report-body" id="report-content">
         {/* Header */}

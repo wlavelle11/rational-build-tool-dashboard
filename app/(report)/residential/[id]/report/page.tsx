@@ -44,7 +44,7 @@ export default async function ResidentialReportPage({ params }: { params: Promis
 
   return (
     <div className="report-page">
-      <PrintButton backHref={`/residential/${id}`} />
+      <PrintButton type="residential" id={id} backHref={`/residential/${id}`} />
 
       <div className="report-body" id="report-content">
         {/* Header */}
