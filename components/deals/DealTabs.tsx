@@ -9,8 +9,6 @@ import { MetricsCards } from './MetricsCards'
 import { RecommendationBadge } from './RecommendationBadge'
 import { ProFormaTable } from '../tables/ProFormaTable'
 import { SensitivityTables } from '../tables/SensitivityTables'
-import { NOIChart } from '../charts/NOIChart'
-import { CashFlowChart } from '../charts/CashFlowChart'
 import { computeSensitivity } from '@/lib/finance'
 import { formatCurrency } from '@/lib/formatters'
 
@@ -65,14 +63,33 @@ export function DealTabs({ deal, inputs, metrics }: Props) {
       {activeTab === 'Overview' && (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <MetricsCards metrics={metrics} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div className="chart-card">
-              <p className="chart-label">NOI Growth</p>
-              <NOIChart proForma={metrics.proForma} />
+          <div className="data-table-wrapper">
+            <div className="data-table-header">
+              <p className="card-title">NOI &amp; Cash Flow by Year</p>
             </div>
-            <div className="chart-card">
-              <p className="chart-label">Annual Cash Flow</p>
-              <CashFlowChart proForma={metrics.proForma} />
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table" style={{ fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Gross Rent</th>
+                    <th>NOI</th>
+                    <th>Cash Flow</th>
+                    <th>Cum. Cash Flow</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.proForma.map(row => (
+                    <tr key={row.year}>
+                      <td className="num">{row.year}</td>
+                      <td className="num">{formatCurrency(row.grossPotentialIncome)}</td>
+                      <td className="num table-cell-primary">{formatCurrency(row.noi)}</td>
+                      <td className="num">{formatCurrency(row.cashFlow)}</td>
+                      <td className="num">{formatCurrency(row.cumulativeCashFlow)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

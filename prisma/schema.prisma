@@ -106,6 +106,7 @@ model Lead {
   status       String?
   sources      String?
   priority     Boolean  @default(false)
+  saved        Boolean  @default(false)
   photoUrl     String?
   notes        String?
   firstSeen    String?
@@ -114,6 +115,7 @@ model Lead {
   updatedAt    DateTime @updatedAt
 
   @@index([tab, score])
+  @@index([saved])
 }
 
 model ResidentialProject {

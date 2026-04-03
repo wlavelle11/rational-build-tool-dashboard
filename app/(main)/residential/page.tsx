@@ -150,7 +150,9 @@ export default async function ResidentialPage() {
                 {analyzed.map(({ project, flip, brrr }) => (
                   <tr key={project.id}>
                     <td>
-                      <div className="deal-row-name truncate-line">{project.name}</div>
+                      <Link href={`/residential/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div className="deal-row-name truncate-line">{project.name}</div>
+                      </Link>
                       <div className="table-cell-muted" style={{ marginTop: 2 }}>{project.neighborhood}</div>
                     </td>
                     <td className="num">{formatCurrency(project.purchasePrice)}</td>

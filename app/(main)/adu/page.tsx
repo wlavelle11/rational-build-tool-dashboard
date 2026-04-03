@@ -106,7 +106,9 @@ export default async function ADUPage() {
                 {analyzed.map(({ project, feasibility, analysis }) => (
                   <tr key={project.id}>
                     <td>
-                      <div className="deal-row-name truncate-line">{project.name}</div>
+                      <Link href={`/adu/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div className="deal-row-name truncate-line">{project.name}</div>
+                      </Link>
                       <div className="table-cell-muted" style={{ marginTop: 2 }}>{project.neighborhood}</div>
                     </td>
                     <td className="num">{project.aduCount}</td>

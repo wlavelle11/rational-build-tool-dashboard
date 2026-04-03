@@ -39,6 +39,7 @@ export async function POST(req: Request) {
           score: d.score, status: d.status, sources: d.sources,
           priority: d.priority, photoUrl: d.photoUrl, notes: d.notes,
           firstSeen: d.firstSeen, lastSeen: d.lastSeen,
+          // never overwrite saved=true from pipeline syncs
         },
         create: {
           address: d.address, zipCode: d.zipCode, leadType: d.leadType, tab: d.tab,
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
           score: d.score, status: d.status, sources: d.sources,
           priority: d.priority, photoUrl: d.photoUrl, notes: d.notes,
           firstSeen: d.firstSeen, lastSeen: d.lastSeen,
+          saved: false,
         },
       })
       upserted++

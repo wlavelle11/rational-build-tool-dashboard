@@ -4,9 +4,10 @@ import { aduSchema } from '@/lib/validations'
 import { assessFeasibility } from '@/lib/finance/adu-feasibility'
 import { analyzeADU } from '@/lib/finance/adu'
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const project = await prisma.aDUProject.findUnique({ where: { id: params.id } })
+    const { id } = await params
+    const project = await prisma.aDUProject.findUnique({ where: { id } })
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json(project)
   } catch {
@@ -14,8 +15,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const body = await req.json()
     const parsed = aduSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
@@ -40,7 +42,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     })
 
     const project = await prisma.aDUProject.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: d.name, neighborhood: d.neighborhood, address: d.address ?? null, apn: d.apn ?? null,
         purchasePrice: d.purchasePrice, lotSizeSqft: d.lotSizeSqft, existingCoverageSqft: d.existingCoverageSqft,
@@ -64,9 +66,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await prisma.aDUProject.delete({ where: { id: params.id } })
+    const { id } = await params
+    await prisma.aDUProject.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

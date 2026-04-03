@@ -2,13 +2,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { formatCurrency } from '@/lib/formatters'
-import { Target, Star, TrendingUp, AlertCircle, Home } from 'lucide-react'
+import { Target, Star, TrendingUp, AlertCircle, Home, Bookmark } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 import { GenerateLeadsButton } from '@/components/leads/GenerateLeadsButton'
 
 export const dynamic = 'force-dynamic'
 
-const TABS = ['NOD', 'Auction', 'Listed', 'Archived'] as const
+const TABS = ['NOD', 'Auction', 'Listed', 'Archived', 'Saved'] as const
 type Tab = typeof TABS[number]
 
 function ScoreBadge({ score }: { score: number }) {
@@ -61,9 +61,9 @@ export default async function LeadsPage({
   const activeTab: Tab = TABS.includes(params.tab as Tab) ? (params.tab as Tab) : 'NOD'
 
   const [allLeads, tabLeads] = await Promise.all([
-    prisma.lead.findMany({ select: { tab: true, score: true, priority: true } }),
+    prisma.lead.findMany({ select: { tab: true, score: true, priority: true, saved: true } }),
     prisma.lead.findMany({
-      where: { tab: activeTab },
+      where: activeTab === 'Saved' ? { saved: true } : { tab: activeTab },
       orderBy: { score: 'desc' },
     }),
   ])
@@ -75,8 +75,9 @@ export default async function LeadsPage({
     ? Math.round(allLeads.reduce((s, l) => s + l.score, 0) / totalLeads)
     : 0
 
+  const savedCount = allLeads.filter(l => l.saved).length
   const tabCounts = TABS.reduce<Record<string, number>>((acc, t) => {
-    acc[t] = allLeads.filter(l => l.tab === t).length
+    acc[t] = t === 'Saved' ? savedCount : allLeads.filter(l => l.tab === t).length
     return acc
   }, {})
 
@@ -113,6 +114,13 @@ export default async function LeadsPage({
           sub="Out of 100"
           trend={avgScore >= 60 ? 'positive' : avgScore >= 40 ? 'warning' : 'negative'}
           icon={<AlertCircle size={16} />}
+        />
+        <StatCard
+          label="Saved"
+          value={String(savedCount)}
+          sub="Preserved from cleanup"
+          trend={savedCount > 0 ? 'positive' : 'neutral'}
+          icon={<Bookmark size={16} />}
         />
       </div>
 
@@ -183,8 +191,17 @@ export default async function LeadsPage({
                     </td>
                     <td><ScoreBadge score={lead.score} /></td>
                     <td>
-                      <div className="deal-row-name truncate-line" style={{ maxWidth: 200 }}>{lead.address}</div>
-                      {lead.priority && <div style={{ marginTop: 3 }}><PriorityBadge /></div>}
+                      <Link href={`/leads/${lead.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div className="deal-row-name truncate-line" style={{ maxWidth: 200 }}>{lead.address}</div>
+                      </Link>
+                      <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
+                        {lead.priority && <PriorityBadge />}
+                        {lead.saved && (
+                          <span className="badge badge-neutral" style={{ fontSize: 10 }}>
+                            <Bookmark size={9} style={{ marginRight: 2 }} />SAVED
+                          </span>
+                        )}
+                      </div>
                       {lead.zipCode && <div className="table-cell-muted" style={{ marginTop: 2 }}>{lead.zipCode}</div>}
                     </td>
                     <td>
@@ -214,11 +231,11 @@ export default async function LeadsPage({
                     </td>
                     <td>
                       <Link
-                        href={`/residential/new?address=${encodeURIComponent(lead.address)}&name=${encodeURIComponent(lead.address)}&purchasePrice=${lead.estValue ?? ''}`}
+                        href={`/leads/${lead.id}`}
                         className="btn btn-outline"
                         style={{ height: 28, fontSize: 12, padding: '0 12px', whiteSpace: 'nowrap' }}
                       >
-                        Analyze
+                        View
                       </Link>
                     </td>
                   </tr>
