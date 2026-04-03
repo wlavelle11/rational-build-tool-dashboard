@@ -91,9 +91,9 @@ export function analyzeADU(inputs: ADUInputs): ADUMetrics {
   const irr = calculateIRR(cashFlows)
   const equityMultiple = equityInvested > 0 ? (cumulativeCashFlow + exitValue) / equityInvested : 0
 
-  // Investor waterfall
+  // Investor waterfall — compound preferred return (industry standard)
   const totalLP = equityInvested
-  const preferredTotal = totalLP * preferredReturnRate * holdPeriodYears
+  const preferredTotal = totalLP * (Math.pow(1 + preferredReturnRate, holdPeriodYears) - 1)
   const lpPreferredPaid = Math.min(preferredTotal, cumulativeCashFlow)
   const remainingAfterPref = Math.max(0, exitValue - totalLP - Math.max(0, preferredTotal - lpPreferredPaid))
   const investorSplit = 1 - sponsorSplit
