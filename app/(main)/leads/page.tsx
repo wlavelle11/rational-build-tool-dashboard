@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { formatCurrency } from '@/lib/formatters'
-import { Target, Star, TrendingUp, AlertCircle } from 'lucide-react'
+import { Target, Star, TrendingUp, AlertCircle, Home } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
+import { GenerateLeadsButton } from '@/components/leads/GenerateLeadsButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +22,33 @@ function PriorityBadge() {
       <Star size={9} style={{ marginRight: 2 }} />
       PRIORITY
     </span>
+  )
+}
+
+function PropertyPhoto({ url, address }: { url: string | null; address: string }) {
+  if (url) {
+    return (
+      <div style={{ width: 72, height: 54, borderRadius: 6, overflow: 'hidden', flexShrink: 0, background: 'var(--color-surface-raised)' }}>
+        <Image
+          src={url}
+          alt={address}
+          width={72}
+          height={54}
+          style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+          unoptimized
+        />
+      </div>
+    )
+  }
+  return (
+    <div style={{
+      width: 72, height: 54, borderRadius: 6, flexShrink: 0,
+      background: 'var(--color-surface-raised)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: 'var(--color-text-tertiary)',
+    }}>
+      <Home size={20} />
+    </div>
   )
 }
 
@@ -58,6 +87,7 @@ export default async function LeadsPage({
           <h1 className="page-title">Property Leads</h1>
           <p className="page-description">Scored leads from the Rational Build pipeline — NOD, auction, and listed properties</p>
         </div>
+        <GenerateLeadsButton />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
@@ -116,7 +146,7 @@ export default async function LeadsPage({
             <div className="empty-state-icon"><Target size={24} /></div>
             <p className="empty-state-title">No {activeTab} leads yet</p>
             <p className="empty-state-desc">
-              Leads populate automatically when the pipeline runs. Run it manually or wait for the daily 7 AM cron.
+              Click <strong>Generate Leads</strong> to run the pipeline and pull the latest scored properties from all sources.
             </p>
           </div>
         </div>
@@ -132,6 +162,7 @@ export default async function LeadsPage({
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: 80 }}>Photo</th>
                   <th>Score</th>
                   <th>Address</th>
                   <th>Type</th>
@@ -146,9 +177,12 @@ export default async function LeadsPage({
               <tbody>
                 {tabLeads.map(lead => (
                   <tr key={lead.id}>
+                    <td>
+                      <PropertyPhoto url={lead.photoUrl ?? null} address={lead.address} />
+                    </td>
                     <td><ScoreBadge score={lead.score} /></td>
                     <td>
-                      <div className="deal-row-name truncate-line" style={{ maxWidth: 220 }}>{lead.address}</div>
+                      <div className="deal-row-name truncate-line" style={{ maxWidth: 200 }}>{lead.address}</div>
                       {lead.priority && <div style={{ marginTop: 3 }}><PriorityBadge /></div>}
                       {lead.zipCode && <div className="table-cell-muted" style={{ marginTop: 2 }}>{lead.zipCode}</div>}
                     </td>
@@ -173,9 +207,9 @@ export default async function LeadsPage({
                     </td>
                     <td className="num table-cell-muted">{lead.filingDate || '—'}</td>
                     <td>
-                      {lead.status ? (
-                        <span className="badge badge-neutral" style={{ fontSize: 11 }}>{lead.status}</span>
-                      ) : '—'}
+                      {lead.status
+                        ? <span className="badge badge-neutral" style={{ fontSize: 11 }}>{lead.status}</span>
+                        : '—'}
                     </td>
                     <td>
                       <Link

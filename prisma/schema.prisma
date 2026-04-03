@@ -106,6 +106,7 @@ model Lead {
   status       String?
   sources      String?
   priority     Boolean  @default(false)
+  photoUrl     String?
   notes        String?
   firstSeen    String?
   lastSeen     String?

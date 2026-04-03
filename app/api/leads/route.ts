@@ -37,7 +37,7 @@ export async function POST(req: Request) {
           equity: d.equity, equityPct: d.equityPct,
           yearBuilt: d.yearBuilt, beds: d.beds, baths: d.baths, sqft: d.sqft,
           score: d.score, status: d.status, sources: d.sources,
-          priority: d.priority, notes: d.notes,
+          priority: d.priority, photoUrl: d.photoUrl, notes: d.notes,
           firstSeen: d.firstSeen, lastSeen: d.lastSeen,
         },
         create: {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
           equity: d.equity, equityPct: d.equityPct,
           yearBuilt: d.yearBuilt, beds: d.beds, baths: d.baths, sqft: d.sqft,
           score: d.score, status: d.status, sources: d.sources,
-          priority: d.priority, notes: d.notes,
+          priority: d.priority, photoUrl: d.photoUrl, notes: d.notes,
           firstSeen: d.firstSeen, lastSeen: d.lastSeen,
         },
       })

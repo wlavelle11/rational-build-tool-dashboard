@@ -118,6 +118,7 @@ export const leadSchema = z.object({
   status:       z.string().max(200).optional(),
   sources:      z.string().max(500).optional(),
   priority:     z.coerce.boolean().default(false),
+  photoUrl:     z.string().url().optional().or(z.literal('')).transform(v => v || undefined),
   notes:        z.string().max(1000).optional(),
   firstSeen:    z.string().max(50).optional(),
   lastSeen:     z.string().max(50).optional(),
