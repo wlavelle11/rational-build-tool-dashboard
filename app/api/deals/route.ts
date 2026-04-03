@@ -29,6 +29,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const deals = await prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } })
-  return NextResponse.json(deals)
+  try {
+    const deals = await prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } })
+    return NextResponse.json(deals)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

@@ -9,7 +9,7 @@ export function analyzeDeal(inputs: DealInputs): DealMetrics {
   const exitValuation = computeExitValuation(proForma, inputs.exitCapRate)
   const year1 = proForma[0]
   const year1CapRate = computeCapRate(inputs.monthlyGrossRent, inputs.vacancyRate, inputs.operatingExpenseRatio, inputs.purchasePrice)
-  const year1CashOnCash = year1.cashFlow / inputs.equityInvested
+  const year1CashOnCash = inputs.equityInvested > 0 ? year1.cashFlow / inputs.equityInvested : 0
   const totalValueCreation = exitValuation - inputs.purchasePrice
   const cumulativeCashFlow = proForma.reduce((s, y) => s + y.cashFlow, 0)
 
@@ -18,7 +18,7 @@ export function analyzeDeal(inputs: DealInputs): DealMetrics {
   const irr = calculateIRR(irrCashFlows)
 
   const totalDistributions = cumulativeCashFlow + exitValuation
-  const equityMultiple = totalDistributions / inputs.equityInvested
+  const equityMultiple = inputs.equityInvested > 0 ? totalDistributions / inputs.equityInvested : 0
 
   const waterfall = computeWaterfall(proForma, exitValuation, inputs.equityInvested, inputs.preferredReturnRate, inputs.sponsorPromoteRate)
   const dealScore = computeDealScore({ capRate: year1CapRate, irr, equityMultiple, cashOnCash: year1CashOnCash, totalValueCreation: totalValueCreation / inputs.purchasePrice })

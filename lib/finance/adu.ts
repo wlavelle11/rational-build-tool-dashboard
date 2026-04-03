@@ -1,3 +1,5 @@
+import { calculateIRR } from './irr'
+
 export interface ADUInputs {
   purchasePrice: number
   constructionCost: number
@@ -79,7 +81,7 @@ export function analyzeADU(inputs: ADUInputs): ADUMetrics {
 
   const year1NOI = proForma[0].noi
   const year10NOI = proForma[proForma.length - 1].noi
-  const exitValue = year10NOI / exitCapRate
+  const exitValue = exitCapRate > 0 ? year10NOI / exitCapRate : 0
   const projectedEquityGain = exitValue - totalProjectCost
   const cumulativeCashFlow = proForma[proForma.length - 1].cumulativeCashFlow
   const totalValueCreation = projectedEquityGain + cumulativeCashFlow
@@ -87,7 +89,7 @@ export function analyzeADU(inputs: ADUInputs): ADUMetrics {
   // IRR calculation: initial outflow = -equityInvested, then annual NOI, then exit at end
   const cashFlows = [-equityInvested, ...proForma.map((r, i) => i === holdPeriodYears - 1 ? r.cashFlow + exitValue : r.cashFlow)]
   const irr = calculateIRR(cashFlows)
-  const equityMultiple = (cumulativeCashFlow + exitValue) / equityInvested
+  const equityMultiple = equityInvested > 0 ? (cumulativeCashFlow + exitValue) / equityInvested : 0
 
   // Investor waterfall
   const totalLP = equityInvested
@@ -121,24 +123,6 @@ export function analyzeADU(inputs: ADUInputs): ADUMetrics {
     recommendation: dealScore >= 80 ? 'Strong Buy' : dealScore >= 60 ? 'Caution' : 'Pass',
     dealScore,
   }
-}
-
-function calculateIRR(cashFlows: number[]): number {
-  let rate = 0.08
-  for (let i = 0; i < 100; i++) {
-    let npv = 0
-    let dnpv = 0
-    for (let t = 0; t < cashFlows.length; t++) {
-      const pv = cashFlows[t] / Math.pow(1 + rate, t)
-      npv += pv
-      dnpv -= t * pv / (1 + rate)
-    }
-    if (Math.abs(npv) < 0.01) break
-    if (dnpv === 0) break
-    rate -= npv / dnpv
-    if (rate < -0.99) rate = -0.99
-  }
-  return rate
 }
 
 function computeADUScore({ irr, equityMultiple, year1NOI, totalProjectCost }: {

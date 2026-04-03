@@ -23,10 +23,12 @@ export function buildProForma(inputs: DealInputs): YearlyProForma[] {
 }
 
 export function computeExitValuation(proForma: YearlyProForma[], exitCapRate: number): number {
+  if (exitCapRate <= 0) return 0
   return proForma[proForma.length - 1].noi / exitCapRate
 }
 
 export function computeCapRate(monthlyGrossRent: number, vacancyRate: number, operatingExpenseRatio: number, purchasePrice: number): number {
+  if (purchasePrice <= 0) return 0
   const egi = monthlyGrossRent * 12 * (1 - vacancyRate)
   const noi = egi * (1 - operatingExpenseRatio)
   return noi / purchasePrice

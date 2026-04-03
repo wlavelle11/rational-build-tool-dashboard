@@ -32,6 +32,8 @@ model Deal {
   cachedRecommendation    String?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
+
+  @@index([updatedAt])
 }
 
 model ADUProject {
@@ -80,6 +82,8 @@ model ADUProject {
 
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+
+  @@index([updatedAt])
 }
 
 model Lead {
@@ -107,6 +111,8 @@ model Lead {
   lastSeen     String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([tab, score])
 }
 
 model ResidentialProject {
@@ -158,5 +164,7 @@ model ResidentialProject {
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+
+  @@index([updatedAt])
 }
 

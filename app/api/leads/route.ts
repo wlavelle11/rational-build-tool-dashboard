@@ -1,74 +1,61 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { leadSchema } from '@/lib/validations'
 
 export async function GET() {
-  const leads = await prisma.lead.findMany({ orderBy: { score: 'desc' } })
-  return NextResponse.json(leads)
+  try {
+    const leads = await prisma.lead.findMany({ orderBy: { score: 'desc' } })
+    return NextResponse.json(leads)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const records: Record<string, unknown>[] = Array.isArray(body) ? body : body.leads ?? []
+  try {
+    const body = await req.json()
+    const records: unknown[] = Array.isArray(body) ? body : (body.leads ?? [])
 
-  if (records.length === 0) {
-    return NextResponse.json({ upserted: 0 })
+    if (records.length === 0) return NextResponse.json({ upserted: 0 })
+
+    let upserted = 0
+    const errors: { index: number; error: unknown }[] = []
+
+    for (let i = 0; i < records.length; i++) {
+      const parsed = leadSchema.safeParse(records[i])
+      if (!parsed.success) {
+        errors.push({ index: i, error: parsed.error.flatten() })
+        continue
+      }
+      const d = parsed.data
+      await prisma.lead.upsert({
+        where: { address: d.address },
+        update: {
+          zipCode: d.zipCode, leadType: d.leadType, tab: d.tab,
+          distressType: d.distressType, filingDate: d.filingDate,
+          estValue: d.estValue, loanAmount: d.loanAmount,
+          equity: d.equity, equityPct: d.equityPct,
+          yearBuilt: d.yearBuilt, beds: d.beds, baths: d.baths, sqft: d.sqft,
+          score: d.score, status: d.status, sources: d.sources,
+          priority: d.priority, notes: d.notes,
+          firstSeen: d.firstSeen, lastSeen: d.lastSeen,
+        },
+        create: {
+          address: d.address, zipCode: d.zipCode, leadType: d.leadType, tab: d.tab,
+          distressType: d.distressType, filingDate: d.filingDate,
+          estValue: d.estValue, loanAmount: d.loanAmount,
+          equity: d.equity, equityPct: d.equityPct,
+          yearBuilt: d.yearBuilt, beds: d.beds, baths: d.baths, sqft: d.sqft,
+          score: d.score, status: d.status, sources: d.sources,
+          priority: d.priority, notes: d.notes,
+          firstSeen: d.firstSeen, lastSeen: d.lastSeen,
+        },
+      })
+      upserted++
+    }
+
+    return NextResponse.json({ upserted, errors: errors.length > 0 ? errors : undefined })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  let upserted = 0
-  for (const r of records) {
-    const address = String(r.address ?? '').trim()
-    if (!address) continue
-
-    await prisma.lead.upsert({
-      where: { address },
-      update: {
-        zipCode:      r.zip_code      != null ? String(r.zip_code)      : undefined,
-        leadType:     r.lead_type     != null ? String(r.lead_type)     : undefined,
-        tab:          r.tab           != null ? String(r.tab)           : 'NOD',
-        distressType: r.distress_type != null ? String(r.distress_type) : undefined,
-        filingDate:   r.filing_date   != null ? String(r.filing_date)   : undefined,
-        estValue:     r.est_value     != null ? Number(r.est_value)     : undefined,
-        loanAmount:   r.loan_amount   != null ? Number(r.loan_amount)   : undefined,
-        equity:       r.equity        != null ? Number(r.equity)        : undefined,
-        equityPct:    r.equity_pct    != null ? Number(r.equity_pct)    : undefined,
-        yearBuilt:    r.year_built    != null ? String(r.year_built)    : undefined,
-        beds:         r.beds          != null ? String(r.beds)          : undefined,
-        baths:        r.baths         != null ? String(r.baths)         : undefined,
-        sqft:         r.sqft          != null ? String(r.sqft)          : undefined,
-        score:        r.score         != null ? Number(r.score)         : 0,
-        status:       r.status        != null ? String(r.status)        : undefined,
-        sources:      r.sources       != null ? String(r.sources)       : undefined,
-        priority:     Boolean(r.priority),
-        notes:        r.notes         != null ? String(r.notes)         : undefined,
-        firstSeen:    r.first_seen    != null ? String(r.first_seen)    : undefined,
-        lastSeen:     r.last_seen     != null ? String(r.last_seen)     : undefined,
-      },
-      create: {
-        address,
-        zipCode:      r.zip_code      != null ? String(r.zip_code)      : undefined,
-        leadType:     r.lead_type     != null ? String(r.lead_type)     : undefined,
-        tab:          r.tab           != null ? String(r.tab)           : 'NOD',
-        distressType: r.distress_type != null ? String(r.distress_type) : undefined,
-        filingDate:   r.filing_date   != null ? String(r.filing_date)   : undefined,
-        estValue:     r.est_value     != null ? Number(r.est_value)     : undefined,
-        loanAmount:   r.loan_amount   != null ? Number(r.loan_amount)   : undefined,
-        equity:       r.equity        != null ? Number(r.equity)        : undefined,
-        equityPct:    r.equity_pct    != null ? Number(r.equity_pct)    : undefined,
-        yearBuilt:    r.year_built    != null ? String(r.year_built)    : undefined,
-        beds:         r.beds          != null ? String(r.beds)          : undefined,
-        baths:        r.baths         != null ? String(r.baths)         : undefined,
-        sqft:         r.sqft          != null ? String(r.sqft)          : undefined,
-        score:        r.score         != null ? Number(r.score)         : 0,
-        status:       r.status        != null ? String(r.status)        : undefined,
-        sources:      r.sources       != null ? String(r.sources)       : undefined,
-        priority:     Boolean(r.priority),
-        notes:        r.notes         != null ? String(r.notes)         : undefined,
-        firstSeen:    r.first_seen    != null ? String(r.first_seen)    : undefined,
-        lastSeen:     r.last_seen     != null ? String(r.last_seen)     : undefined,
-      },
-    })
-    upserted++
-  }
-
-  return NextResponse.json({ upserted }, { status: 200 })
 }

@@ -1,9 +1,6 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-import { analyzeDeal } from '@/lib/finance'
-import { calculateFlip } from '@/lib/finance/flip'
-import { calculateBRRR } from '@/lib/finance/brrr'
-import { formatCurrency, formatPercent } from '@/lib/formatters'
+import { formatCurrency } from '@/lib/formatters'
 import { Building2, Home, Plus, ArrowRight, TrendingUp, Briefcase, Hammer } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 
@@ -66,57 +63,61 @@ function StrategyCard({ title, description, href, icon, count, ctaLabel }: {
 
 export default async function HomePage() {
   const [deals, residentialProjects, aduProjects] = await Promise.all([
-    prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } }),
-    prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } }),
-    prisma.aDUProject.findMany({ orderBy: { updatedAt: 'desc' } }),
+    prisma.deal.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true, neighborhood: true, purchasePrice: true, updatedAt: true, cachedRecommendation: true },
+    }),
+    prisma.residentialProject.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true, neighborhood: true, purchasePrice: true, updatedAt: true, cachedFlipRec: true },
+    }),
+    prisma.aDUProject.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true, neighborhood: true, purchasePrice: true, constructionCost: true, updatedAt: true, cachedRecommendation: true },
+    }),
   ])
 
-  // Analyze multifamily deals
-  const analyzedDeals = deals.map((deal) => {
-    const metrics = analyzeDeal({
-      purchasePrice: deal.purchasePrice, monthlyGrossRent: deal.monthlyGrossRent,
-      vacancyRate: deal.vacancyRate, operatingExpenseRatio: deal.operatingExpenseRatio,
-      annualRentGrowth: deal.annualRentGrowth, annualExpenseGrowth: deal.annualExpenseGrowth,
-      holdPeriodYears: deal.holdPeriodYears, exitCapRate: deal.exitCapRate,
-      acquisitionClosingCosts: deal.acquisitionClosingCosts, renovationCapex: deal.renovationCapex,
-      equityInvested: deal.equityInvested, preferredReturnRate: deal.preferredReturnRate,
-      sponsorPromoteRate: deal.sponsorPromoteRate,
-    })
-    return { type: 'multifamily' as const, name: deal.name, neighborhood: deal.neighborhood, price: deal.purchasePrice, recommendation: metrics.recommendation, updatedAt: deal.updatedAt, href: `/multifamily/${deal.id}` }
-  })
-
-  // Analyze residential projects
-  const analyzedResidential = residentialProjects.map((p) => {
-    const flip = calculateFlip({
-      purchasePrice: p.purchasePrice, renovationBudget: p.renovationBudget, arv: p.arv,
-      holdPeriodMonths: p.flipHoldMonths, buyClosingCosts: p.buyClosingCosts,
-      sellClosingCostsPct: p.flipSellClosingPct, investorCapital: p.flipInvestorCapital,
-      monthlyCarryingCosts: p.flipMonthlyCarrying,
-      financingType: p.flipFinancingType as 'cash' | 'hard_money',
-      hardMoneyLtvPct: p.flipHardMoneyLtvPct ?? undefined,
-      hardMoneyRate: p.flipHardMoneyRate ?? undefined,
-      hardMoneyPoints: p.flipHardMoneyPoints ?? undefined,
-    })
-    return { type: 'residential' as const, name: p.name, neighborhood: p.neighborhood, price: p.purchasePrice, recommendation: flip.recommendation, updatedAt: p.updatedAt, href: '/residential' }
-  })
-
-  const analyzedADU = aduProjects.map((p) => ({
-    type: 'adu' as const, name: p.name, neighborhood: p.neighborhood, price: p.purchasePrice + p.constructionCost,
-    recommendation: (p.cachedRecommendation ?? 'Pass') as string, updatedAt: p.updatedAt, href: '/adu',
-  }))
-
-  // Combined recent activity
-  const recentActivity = [...analyzedDeals, ...analyzedResidential, ...analyzedADU]
+  const recentActivity = [
+    ...deals.map(d => ({
+      type: 'multifamily' as const,
+      name: d.name, neighborhood: d.neighborhood,
+      price: d.purchasePrice,
+      recommendation: d.cachedRecommendation ?? 'Pass',
+      updatedAt: d.updatedAt,
+      href: `/multifamily/${d.id}`,
+    })),
+    ...residentialProjects.map(p => ({
+      type: 'residential' as const,
+      name: p.name, neighborhood: p.neighborhood,
+      price: p.purchasePrice,
+      recommendation: p.cachedFlipRec ?? 'Pass',
+      updatedAt: p.updatedAt,
+      href: '/residential',
+    })),
+    ...aduProjects.map(p => ({
+      type: 'adu' as const,
+      name: p.name, neighborhood: p.neighborhood,
+      price: p.purchasePrice + p.constructionCost,
+      recommendation: p.cachedRecommendation ?? 'Pass',
+      updatedAt: p.updatedAt,
+      href: '/adu',
+    })),
+  ]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 10)
 
   const totalProjects = deals.length + residentialProjects.length + aduProjects.length
-  const totalValue = deals.reduce((s, d) => s + d.purchasePrice, 0) + residentialProjects.reduce((s, p) => s + p.purchasePrice, 0) + aduProjects.reduce((s, p) => s + p.purchasePrice + p.constructionCost, 0)
-  const totalStrategies = (deals.length > 0 ? 1 : 0) + (residentialProjects.length > 0 ? 1 : 0) + (aduProjects.length > 0 ? 1 : 0)
+  const totalValue =
+    deals.reduce((s, d) => s + d.purchasePrice, 0) +
+    residentialProjects.reduce((s, p) => s + p.purchasePrice, 0) +
+    aduProjects.reduce((s, p) => s + p.purchasePrice + p.constructionCost, 0)
+  const totalStrategies =
+    (deals.length > 0 ? 1 : 0) +
+    (residentialProjects.length > 0 ? 1 : 0) +
+    (aduProjects.length > 0 ? 1 : 0)
 
   return (
     <div className="fade-in">
-      {/* Page Header */}
       <div className="page-header">
         <div className="page-header-left">
           <p className="page-eyebrow">Rational Build</p>
@@ -125,20 +126,9 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Aggregate Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard
-          label="Total Projects"
-          value={String(totalProjects)}
-          sub="Across all strategies"
-          icon={<Briefcase size={16} />}
-        />
-        <StatCard
-          label="Active Strategies"
-          value={String(totalStrategies)}
-          sub="Multifamily, Residential"
-          icon={<TrendingUp size={16} />}
-        />
+        <StatCard label="Total Projects" value={String(totalProjects)} sub="Across all strategies" icon={<Briefcase size={16} />} />
+        <StatCard label="Active Strategies" value={String(totalStrategies)} sub="Multifamily, Residential, ADU" icon={<TrendingUp size={16} />} />
         <StatCard
           label="Portfolio Value"
           value={totalValue >= 1_000_000 ? `$${(totalValue / 1_000_000).toFixed(1)}M` : formatCurrency(totalValue)}
@@ -146,35 +136,12 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* Strategy Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 32 }}>
-        <StrategyCard
-          title="Multifamily"
-          description="Apartment buildings & multi-unit properties"
-          href="/multifamily"
-          icon={<Building2 size={20} />}
-          count={deals.length}
-          ctaLabel="New Analysis"
-        />
-        <StrategyCard
-          title="Residential Flip & BRRR"
-          description="Single family flip vs buy-renovate-rent-refinance"
-          href="/residential"
-          icon={<Home size={20} />}
-          count={residentialProjects.length}
-          ctaLabel="New Analysis"
-        />
-        <StrategyCard
-          title="ADU Development"
-          description="San Diego Bonus ADU — feasibility + 10-year model"
-          href="/adu"
-          icon={<Hammer size={20} />}
-          count={aduProjects.length}
-          ctaLabel="New Analysis"
-        />
+        <StrategyCard title="Multifamily" description="Apartment buildings & multi-unit properties" href="/multifamily" icon={<Building2 size={20} />} count={deals.length} ctaLabel="New Analysis" />
+        <StrategyCard title="Residential Flip & BRRR" description="Single family flip vs buy-renovate-rent-refinance" href="/residential" icon={<Home size={20} />} count={residentialProjects.length} ctaLabel="New Analysis" />
+        <StrategyCard title="ADU Development" description="San Diego Bonus ADU — feasibility + 10-year model" href="/adu" icon={<Hammer size={20} />} count={aduProjects.length} ctaLabel="New Analysis" />
       </div>
 
-      {/* Recent Activity Table */}
       {recentActivity.length > 0 && (
         <div className="data-table-wrapper">
           <div className="data-table-header">
@@ -209,9 +176,7 @@ export default async function HomePage() {
                       </span>
                     </td>
                     <td className="num">{formatCurrency(item.price)}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      <RecBadge rec={item.recommendation} />
-                    </td>
+                    <td style={{ textAlign: 'center' }}><RecBadge rec={item.recommendation} /></td>
                     <td className="num table-cell-muted">
                       {new Date(item.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                     </td>

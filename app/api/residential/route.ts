@@ -5,8 +5,12 @@ import { calculateFlip } from '@/lib/finance/flip'
 import { calculateBRRR } from '@/lib/finance/brrr'
 
 export async function GET() {
-  const projects = await prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } })
-  return NextResponse.json(projects)
+  try {
+    const projects = await prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } })
+    return NextResponse.json(projects)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
