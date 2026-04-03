@@ -323,6 +323,18 @@ body {
   border-color: var(--color-brand-hover);
 }
 
+/* Danger */
+.btn-danger {
+  background: #e53e3e;
+  color: white;
+  border-color: #e53e3e;
+  box-shadow: var(--shadow-xs);
+}
+.btn-danger:hover {
+  background: #c53030;
+  border-color: #c53030;
+}
+
 /* Secondary */
 .btn-secondary {
   background: var(--color-surface);
@@ -1130,3 +1142,49 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn 0.2s var(--ease) both; }
+
+/* ============================================================
+   MOBILE RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Allow tables to scroll horizontally instead of overflowing */
+  .data-table-wrapper {
+    overflow: visible;
+  }
+  .data-table-wrapper > div[style*="overflow"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Nav collapses brand subtitle on small screens */
+  .nav-brand-name { font-size: 13px; }
+
+  /* Page header stacks vertically */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* Stat cards: minimum 140px so they wrap earlier */
+  .stat-card { min-width: 140px; }
+
+  /* Two-column grids drop to single column */
+  .two-col-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide lower-priority table columns on mobile */
+  .data-table th:nth-child(n+6),
+  .data-table td:nth-child(n+6) {
+    display: none;
+  }
+
+  /* Reduce padding on cards */
+  .card { padding: 16px !important; }
+}
+
+@media (max-width: 480px) {
+  .nav-inner { gap: 8px; }
+  .page-title { font-size: 20px; }
+}

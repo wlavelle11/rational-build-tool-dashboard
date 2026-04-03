@@ -7,8 +7,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <header className="nav">
         <div className="nav-inner">
           <Link href="/" className="nav-brand">
-            <div className="nav-logo-mark">RBD</div>
-            <span className="nav-brand-name">Deal Analyzer</span>
+            <div className="nav-logo-mark" style={{ letterSpacing: '0.04em', fontWeight: 800 }}>RBD</div>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+              <span className="nav-brand-name" style={{ fontWeight: 700, fontSize: 14 }}>Rational Build</span>
+              <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Investment Dashboard</span>
+            </div>
           </Link>
           <NavLinks />
         </div>

@@ -60,12 +60,13 @@ export default async function LeadsPage({
   const params = await searchParams
   const activeTab: Tab = TABS.includes(params.tab as Tab) ? (params.tab as Tab) : 'NOD'
 
-  const [allLeads, tabLeads] = await Promise.all([
+  const [allLeads, tabLeads, lastSynced] = await Promise.all([
     prisma.lead.findMany({ select: { tab: true, score: true, priority: true, saved: true } }),
     prisma.lead.findMany({
       where: activeTab === 'Saved' ? { saved: true } : { tab: activeTab },
       orderBy: { score: 'desc' },
     }),
+    prisma.lead.findFirst({ orderBy: { updatedAt: 'desc' }, select: { updatedAt: true } }),
   ])
 
   const totalLeads    = allLeads.length
@@ -87,7 +88,14 @@ export default async function LeadsPage({
         <div className="page-header-left">
           <p className="page-eyebrow">Pipeline</p>
           <h1 className="page-title">Property Leads</h1>
-          <p className="page-description">Scored leads from the Rational Build pipeline — NOD, auction, and listed properties</p>
+          <p className="page-description">
+            Scored leads from the Rational Build pipeline — NOD, auction, and listed properties
+            {lastSynced && (
+              <span style={{ marginLeft: 10, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                · Last synced {new Date(lastSynced.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+          </p>
         </div>
         <GenerateLeadsButton />
       </div>

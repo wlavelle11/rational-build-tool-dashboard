@@ -9,6 +9,7 @@ import {
   Building2, Hammer,
 } from 'lucide-react'
 import { SaveLeadButton } from '@/components/leads/SaveLeadButton'
+import { DeleteLeadButton } from '@/components/leads/DeleteLeadButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </p>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+          <DeleteLeadButton id={lead.id} />
           <SaveLeadButton id={lead.id} initialSaved={lead.saved} />
           <Link href={analyzeADUHref} className="btn btn-outline">
             <Hammer size={14} />
