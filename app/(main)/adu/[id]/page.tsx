@@ -6,7 +6,7 @@ import { analyzeADU } from '@/lib/finance/adu'
 import { formatCurrency, formatPercent, formatMultiple } from '@/lib/formatters'
 import {
   ArrowLeft, Building2, CheckCircle2, DollarSign,
-  TrendingUp, BarChart2, Edit,
+  TrendingUp, BarChart2, Edit, FileText,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -96,10 +96,14 @@ export default async function ADUDetailPage({ params }: { params: Promise<{ id: 
           {p.address && <p className="page-description" style={{ marginTop: 4 }}>{p.address}</p>}
           {p.neighborhood && <p style={{ fontSize: 13, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{p.neighborhood}</p>}
         </div>
-        <div style={{ flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
           <Link href={`/adu/new?id=${p.id}`} className="btn btn-outline">
             <Edit size={14} />
             Edit Inputs
+          </Link>
+          <Link href={`/adu/${p.id}/report`} className="btn btn-primary">
+            <FileText size={14} />
+            Investor Report
           </Link>
         </div>
       </div>

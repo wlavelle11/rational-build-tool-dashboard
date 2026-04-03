@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { calculateFlip } from '@/lib/finance/flip'
 import { calculateBRRR } from '@/lib/finance/brrr'
 import { formatCurrency, formatPercent } from '@/lib/formatters'
-import { ArrowLeft, Home, DollarSign, TrendingUp, BarChart2, RefreshCw, Edit } from 'lucide-react'
+import { ArrowLeft, Home, DollarSign, TrendingUp, BarChart2, RefreshCw, Edit, FileText } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,6 +106,10 @@ export default async function ResidentialDetailPage({ params }: { params: Promis
           <Link href={editHref} className="btn btn-outline">
             <Edit size={14} />
             Edit Inputs
+          </Link>
+          <Link href={`/residential/${p.id}/report`} className="btn btn-primary">
+            <FileText size={14} />
+            Investor Report
           </Link>
         </div>
       </div>

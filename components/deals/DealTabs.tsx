@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin } from 'lucide-react'
+import Link from 'next/link'
+import { MapPin, FileText } from 'lucide-react'
 import type { Deal } from '@prisma/client'
 import type { DealInputs, DealMetrics } from '@/lib/finance/types'
 import { DealForm } from './DealForm'
@@ -43,7 +44,13 @@ export function DealTabs({ deal, inputs, metrics }: Props) {
             <span className="deal-header-pill">{formatCurrency(deal.purchasePrice)}</span>
           </div>
         </div>
-        <RecommendationBadge recommendation={metrics.recommendation} score={metrics.dealScore} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <RecommendationBadge recommendation={metrics.recommendation} score={metrics.dealScore} />
+          <Link href={`/multifamily/${deal.id}/report`} className="btn btn-primary" style={{ height: 34, fontSize: 13 }}>
+            <FileText size={14} />
+            Investor Report
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
