@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, FileText } from 'lucide-react'
-import type { Deal } from '@prisma/client'
 import type { DealInputs, DealMetrics } from '@/lib/finance/types'
 import { DealForm } from './DealForm'
 import { MetricsCards } from './MetricsCards'
@@ -14,7 +13,14 @@ import { computeSensitivity } from '@/lib/finance'
 import { formatCurrency } from '@/lib/formatters'
 
 interface Props {
-  deal: Deal
+  deal: {
+    id: string; name: string; neighborhood: string; address: string | null
+    units: number; purchasePrice: number; monthlyGrossRent: number
+    vacancyRate: number; operatingExpenseRatio: number; annualRentGrowth: number
+    annualExpenseGrowth: number; holdPeriodYears: number; exitCapRate: number
+    acquisitionClosingCosts: number; renovationCapex: number; equityInvested: number
+    preferredReturnRate: number; sponsorPromoteRate: number
+  }
   inputs: DealInputs
   metrics: DealMetrics
 }

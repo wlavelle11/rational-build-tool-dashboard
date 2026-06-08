@@ -5,13 +5,11 @@ import { formatCurrency } from '@/lib/formatters'
 import { Target, Star, TrendingUp, AlertCircle, Home, Bookmark } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 import { GenerateLeadsButton } from '@/components/leads/GenerateLeadsButton'
-import type { Lead } from '@prisma/client'
-
 export const dynamic = 'force-dynamic'
 
 const TABS = ['NOD', 'Auction', 'Listed', 'Archived', 'Saved'] as const
 type Tab = typeof TABS[number]
-type LeadSummary = Pick<Lead, 'tab' | 'score' | 'priority' | 'saved'>
+type LeadSummary = { tab: string; score: number; priority: boolean; saved: boolean }
 
 function ScoreBadge({ score }: { score: number }) {
   const cls = score >= 70 ? 'badge badge-success' : score >= 50 ? 'badge badge-warning' : 'badge badge-danger'
@@ -194,7 +192,7 @@ export default async function LeadsPage({
                 </tr>
               </thead>
               <tbody>
-                {tabLeads.map((lead: Lead) => (
+                {tabLeads.map((lead: typeof tabLeads[number]) => (
                   <tr key={lead.id}>
                     <td>
                       <PropertyPhoto url={lead.photoUrl ?? null} address={lead.address} />
