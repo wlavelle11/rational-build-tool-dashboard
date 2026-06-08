@@ -22,7 +22,7 @@ function RecBadge({ rec }: { rec: string }) {
 export default async function ADUPage() {
   const projects = await prisma.aDUProject.findMany({ orderBy: { updatedAt: 'desc' } })
 
-  const analyzed = projects.map((p) => {
+  const analyzed = projects.map((p: typeof projects[number]) => {
     const feasibility = assessFeasibility({
       lotSizeSqft: p.lotSizeSqft, existingCoverageSqft: p.existingCoverageSqft,
       zoningCode: p.zoningCode, aduCount: p.aduCount,

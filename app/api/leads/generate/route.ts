@@ -5,7 +5,7 @@ import os from 'os'
 
 const PIPELINE_DIR = path.join(os.homedir(), 'rational-pipeline')
 const PYTHON_BIN   = path.join(PIPELINE_DIR, 'venv', 'bin', 'python3')
-const PIPELINE_SCRIPT = path.join(PIPELINE_DIR, 'pipeline.py')
+const PIPELINE_SCRIPT = path.join(PIPELINE_DIR, 'run.py')
 
 let runningPid: number | null = null
 let lastRunAt: string | null = null
