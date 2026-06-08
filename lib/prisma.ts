@@ -5,11 +5,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-const dbUrl = process.env.DATABASE_URL!;
-console.log('[prisma] connecting to:', dbUrl?.replace(/:[^@]+@/, ':***@'));
-
 const adapter = new PrismaPg({
-  connectionString: dbUrl,
+  connectionString: process.env.DATABASE_URL!,
 });
 
 export const prisma =
