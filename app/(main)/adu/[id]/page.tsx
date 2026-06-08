@@ -8,6 +8,8 @@ import {
   ArrowLeft, Building2, CheckCircle2, DollarSign,
   TrendingUp, BarChart2, Edit, FileText,
 } from 'lucide-react'
+import type { FeasibilityCategory } from '@/lib/finance/adu-feasibility'
+import type { ADUYearlyRow } from '@/lib/finance/adu'
 
 export const dynamic = 'force-dynamic'
 
@@ -165,7 +167,7 @@ export default async function ADUDetailPage({ params }: { params: Promise<{ id: 
           <div className="card" style={{ padding: 24 }}>
             <SectionHeader title="Feasibility Breakdown" icon={<CheckCircle2 size={14} />} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {feasibility.categories.map(cat => (
+              {feasibility.categories.map((cat: FeasibilityCategory) => (
                 <div key={cat.label} style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -208,7 +210,7 @@ export default async function ADUDetailPage({ params }: { params: Promise<{ id: 
                   </tr>
                 </thead>
                 <tbody>
-                  {analysis.proForma.map(row => (
+                  {analysis.proForma.map((row: ADUYearlyRow) => (
                     <tr key={row.year}>
                       <td className="num">{row.year}</td>
                       <td className="num">{formatCurrency(row.grossRent)}</td>

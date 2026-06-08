@@ -5,11 +5,13 @@ import { formatCurrency } from '@/lib/formatters'
 import { Target, Star, TrendingUp, AlertCircle, Home, Bookmark } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 import { GenerateLeadsButton } from '@/components/leads/GenerateLeadsButton'
+import type { Lead } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
 const TABS = ['NOD', 'Auction', 'Listed', 'Archived', 'Saved'] as const
 type Tab = typeof TABS[number]
+type LeadSummary = Pick<Lead, 'tab' | 'score' | 'priority' | 'saved'>
 
 function ScoreBadge({ score }: { score: number }) {
   const cls = score >= 70 ? 'badge badge-success' : score >= 50 ? 'badge badge-warning' : 'badge badge-danger'
@@ -70,15 +72,15 @@ export default async function LeadsPage({
   ])
 
   const totalLeads    = allLeads.length
-  const priorityCount = allLeads.filter(l => l.priority).length
-  const highScore     = allLeads.filter(l => l.score >= 70).length
+  const priorityCount = allLeads.filter((l: LeadSummary) => l.priority).length
+  const highScore     = allLeads.filter((l: LeadSummary) => l.score >= 70).length
   const avgScore      = totalLeads > 0
-    ? Math.round(allLeads.reduce((s, l) => s + l.score, 0) / totalLeads)
+    ? Math.round(allLeads.reduce((s: number, l: LeadSummary) => s + l.score, 0) / totalLeads)
     : 0
 
-  const savedCount = allLeads.filter(l => l.saved).length
-  const tabCounts = TABS.reduce<Record<string, number>>((acc, t) => {
-    acc[t] = t === 'Saved' ? savedCount : allLeads.filter(l => l.tab === t).length
+  const savedCount = allLeads.filter((l: LeadSummary) => l.saved).length
+  const tabCounts = TABS.reduce<Record<string, number>>((acc: Record<string, number>, t: Tab) => {
+    acc[t] = t === 'Saved' ? savedCount : allLeads.filter((l: LeadSummary) => l.tab === t).length
     return acc
   }, {})
 
@@ -134,7 +136,7 @@ export default async function LeadsPage({
 
       {/* Tab filter */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {TABS.map(t => (
+        {TABS.map((t: Tab) => (
           <Link
             key={t}
             href={`/leads?tab=${t}`}
@@ -192,7 +194,7 @@ export default async function LeadsPage({
                 </tr>
               </thead>
               <tbody>
-                {tabLeads.map(lead => (
+                {tabLeads.map((lead: Lead) => (
                   <tr key={lead.id}>
                     <td>
                       <PropertyPhoto url={lead.photoUrl ?? null} address={lead.address} />

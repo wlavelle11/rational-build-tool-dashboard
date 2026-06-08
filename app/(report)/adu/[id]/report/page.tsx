@@ -4,6 +4,8 @@ import { assessFeasibility } from '@/lib/finance/adu-feasibility'
 import { analyzeADU } from '@/lib/finance/adu'
 import { formatCurrency, formatPercent, formatMultiple } from '@/lib/formatters'
 import { PrintButton } from '@/components/report/PrintButton'
+import type { FeasibilityCategory } from '@/lib/finance/adu-feasibility'
+import type { ADUYearlyRow } from '@/lib/finance/adu'
 
 export const dynamic = 'force-dynamic'
 
@@ -130,7 +132,7 @@ export default async function ADUReportPage({ params }: { params: Promise<{ id: 
               <tr><th style={{ textAlign: 'left' }}>Category</th><th>Score</th><th>Result</th></tr>
             </thead>
             <tbody>
-              {feasibility.categories.map(cat => (
+              {feasibility.categories.map((cat: FeasibilityCategory) => (
                 <tr key={cat.label}>
                   <td>{cat.label}</td>
                   <td>{cat.score} / {cat.maxScore}</td>
@@ -159,7 +161,7 @@ export default async function ADUReportPage({ params }: { params: Promise<{ id: 
               </tr>
             </thead>
             <tbody>
-              {analysis.proForma.map(row => (
+              {analysis.proForma.map((row: ADUYearlyRow) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
                   <td>{formatCurrency(row.grossRent)}</td>

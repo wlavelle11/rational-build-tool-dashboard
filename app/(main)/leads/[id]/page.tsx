@@ -148,7 +148,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <Section title="Sources" icon={<Radio size={15} />}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {lead.sources.split(',').map(s => s.trim()).filter(Boolean).map(src => (
+                  {lead.sources.split(',').map((s: string) => s.trim()).filter(Boolean).map((src: string) => (
                     <span key={src} className="badge badge-neutral" style={{ fontSize: 12 }}>{src}</span>
                   ))}
                 </div>

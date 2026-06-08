@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { analyzeDeal } from '@/lib/finance'
 import { formatCurrency, formatPercent, formatMultiple } from '@/lib/formatters'
 import { PrintButton } from '@/components/report/PrintButton'
+import type { YearlyProForma } from '@/lib/finance/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -135,7 +136,7 @@ export default async function MultifamilyReportPage({ params }: { params: Promis
               </tr>
             </thead>
             <tbody>
-              {metrics.proForma.map(row => (
+              {metrics.proForma.map((row: YearlyProForma) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
                   <td>{formatCurrency(row.grossPotentialIncome)}</td>
