@@ -25,7 +25,9 @@ function RecBadge({ rec }: { rec: string }) {
 export default async function MultifamilyPage() {
   const deals = await prisma.deal.findMany({ orderBy: { updatedAt: 'desc' } })
 
-  const analyzed = deals.map((deal) => {
+  type Deal = typeof deals[number]
+
+  const analyzed = deals.map((deal: Deal) => {
     const metrics = analyzeDeal({
       purchasePrice: deal.purchasePrice,
       monthlyGrossRent: deal.monthlyGrossRent,
@@ -44,11 +46,13 @@ export default async function MultifamilyPage() {
     return { deal, metrics }
   })
 
+  type AnalyzedDeal = typeof analyzed[number]
+
   const avgIRR = analyzed.length > 0
-    ? analyzed.reduce((s, d) => s + d.metrics.irr, 0) / analyzed.length
+    ? analyzed.reduce((s: number, d: AnalyzedDeal) => s + d.metrics.irr, 0) / analyzed.length
     : 0
-  const strongBuys = analyzed.filter(d => d.metrics.recommendation === 'Strong Buy').length
-  const totalValue = analyzed.reduce((s, d) => s + d.deal.purchasePrice, 0)
+  const strongBuys = analyzed.filter((d: AnalyzedDeal) => d.metrics.recommendation === 'Strong Buy').length
+  const totalValue = analyzed.reduce((s: number, d: AnalyzedDeal) => s + d.deal.purchasePrice, 0)
 
   return (
     <div className="fade-in">
@@ -131,7 +135,7 @@ export default async function MultifamilyPage() {
                 </tr>
               </thead>
               <tbody>
-                {analyzed.map(({ deal, metrics }) => (
+                {analyzed.map(({ deal, metrics }: AnalyzedDeal) => (
                   <tr key={deal.id}>
                     <td>
                       <Link href={`/multifamily/${deal.id}`} className="deal-row-link">

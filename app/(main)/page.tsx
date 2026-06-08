@@ -77,8 +77,12 @@ export default async function HomePage() {
     }),
   ])
 
+  type Deal = typeof deals[number]
+  type ResProject = typeof residentialProjects[number]
+  type AduProject = typeof aduProjects[number]
+
   const recentActivity = [
-    ...deals.map(d => ({
+    ...deals.map((d: Deal) => ({
       type: 'multifamily' as const,
       name: d.name, neighborhood: d.neighborhood,
       price: d.purchasePrice,
@@ -86,7 +90,7 @@ export default async function HomePage() {
       updatedAt: d.updatedAt,
       href: `/multifamily/${d.id}`,
     })),
-    ...residentialProjects.map(p => ({
+    ...residentialProjects.map((p: ResProject) => ({
       type: 'residential' as const,
       name: p.name, neighborhood: p.neighborhood,
       price: p.purchasePrice,
@@ -94,7 +98,7 @@ export default async function HomePage() {
       updatedAt: p.updatedAt,
       href: '/residential',
     })),
-    ...aduProjects.map(p => ({
+    ...aduProjects.map((p: AduProject) => ({
       type: 'adu' as const,
       name: p.name, neighborhood: p.neighborhood,
       price: p.purchasePrice + p.constructionCost,
@@ -106,11 +110,13 @@ export default async function HomePage() {
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 10)
 
+  type ActivityItem = typeof recentActivity[number]
+
   const totalProjects = deals.length + residentialProjects.length + aduProjects.length
   const totalValue =
-    deals.reduce((s, d) => s + d.purchasePrice, 0) +
-    residentialProjects.reduce((s, p) => s + p.purchasePrice, 0) +
-    aduProjects.reduce((s, p) => s + p.purchasePrice + p.constructionCost, 0)
+    deals.reduce((s: number, d: Deal) => s + d.purchasePrice, 0) +
+    residentialProjects.reduce((s: number, p: ResProject) => s + p.purchasePrice, 0) +
+    aduProjects.reduce((s: number, p: AduProject) => s + p.purchasePrice + p.constructionCost, 0)
   const totalStrategies =
     (deals.length > 0 ? 1 : 0) +
     (residentialProjects.length > 0 ? 1 : 0) +
@@ -162,7 +168,7 @@ export default async function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {recentActivity.map((item, i) => (
+                {recentActivity.map((item: ActivityItem, i: number) => (
                   <tr key={`${item.type}-${i}`}>
                     <td>
                       <Link href={item.href} className="deal-row-link">

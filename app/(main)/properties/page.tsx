@@ -45,7 +45,10 @@ export default async function PropertiesPage() {
     prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } }),
   ])
 
-  const multifamilyRows = deals.map((deal) => {
+  type Deal = typeof deals[number]
+  type ResidentialProject = typeof residentialProjects[number]
+
+  const multifamilyRows = deals.map((deal: Deal) => {
     const metrics = analyzeDeal({
       purchasePrice: deal.purchasePrice,
       monthlyGrossRent: deal.monthlyGrossRent,
@@ -75,7 +78,7 @@ export default async function PropertiesPage() {
     }
   })
 
-  const residentialRows = residentialProjects.map((p) => {
+  const residentialRows = residentialProjects.map((p: ResidentialProject) => {
     const flip = calculateFlip({
       purchasePrice: p.purchasePrice,
       renovationBudget: p.renovationBudget,
@@ -107,7 +110,9 @@ export default async function PropertiesPage() {
   const allProperties = [...multifamilyRows, ...residentialRows]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
-  const totalValue = allProperties.reduce((s, p) => s + p.purchasePrice, 0)
+  type PropertyRow = typeof allProperties[number]
+
+  const totalValue = allProperties.reduce((s: number, p: PropertyRow) => s + p.purchasePrice, 0)
 
   return (
     <div className="fade-in">
@@ -186,7 +191,7 @@ export default async function PropertiesPage() {
                 </tr>
               </thead>
               <tbody>
-                {allProperties.map((p) => (
+                {allProperties.map((p: PropertyRow) => (
                   <tr key={`${p.strategy}-${p.id}`}>
                     <td>
                       <Link href={p.href} className="deal-row-link">

@@ -26,7 +26,9 @@ function RecBadge({ rec }: { rec: string }) {
 export default async function ResidentialPage() {
   const projects = await prisma.residentialProject.findMany({ orderBy: { updatedAt: 'desc' } })
 
-  const analyzed = projects.map((p) => {
+  type Project = typeof projects[number]
+
+  const analyzed = projects.map((p: Project) => {
     const flip = calculateFlip({
       purchasePrice: p.purchasePrice,
       renovationBudget: p.renovationBudget,
@@ -65,14 +67,16 @@ export default async function ResidentialPage() {
     return { project: p, flip, brrr }
   })
 
+  type AnalyzedProject = typeof analyzed[number]
+
   const totalProjects = projects.length
   const avgFlipROI = analyzed.length > 0
-    ? analyzed.reduce((s, d) => s + d.flip.annualizedRoi, 0) / analyzed.length
+    ? analyzed.reduce((s: number, d: AnalyzedProject) => s + d.flip.annualizedRoi, 0) / analyzed.length
     : 0
   const avgCashYield = analyzed.length > 0
-    ? analyzed.reduce((s, d) => s + d.brrr.actualCashYield, 0) / analyzed.length
+    ? analyzed.reduce((s: number, d: AnalyzedProject) => s + d.brrr.actualCashYield, 0) / analyzed.length
     : 0
-  const totalPipeline = projects.reduce((s, p) => s + p.purchasePrice, 0)
+  const totalPipeline = projects.reduce((s: number, p: Project) => s + p.purchasePrice, 0)
 
   return (
     <div className="fade-in">
@@ -147,7 +151,7 @@ export default async function ResidentialPage() {
                 </tr>
               </thead>
               <tbody>
-                {analyzed.map(({ project, flip, brrr }) => (
+                {analyzed.map(({ project, flip, brrr }: AnalyzedProject) => (
                   <tr key={project.id}>
                     <td>
                       <Link href={`/residential/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>

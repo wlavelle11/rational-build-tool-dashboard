@@ -21,8 +21,9 @@ function RecBadge({ rec }: { rec: string }) {
 
 export default async function ADUPage() {
   const projects = await prisma.aDUProject.findMany({ orderBy: { updatedAt: 'desc' } })
+  type Project = typeof projects[number]
 
-  const analyzed = projects.map((p: typeof projects[number]) => {
+  const analyzed = projects.map((p: Project) => {
     const feasibility = assessFeasibility({
       lotSizeSqft: p.lotSizeSqft, existingCoverageSqft: p.existingCoverageSqft,
       zoningCode: p.zoningCode, aduCount: p.aduCount,
@@ -42,9 +43,11 @@ export default async function ADUPage() {
     return { project: p, feasibility, analysis }
   })
 
-  const goCount = analyzed.filter((a: typeof analyzed[number]) => a.feasibility.flag === 'GO').length
-  const avgIRR = analyzed.length > 0 ? analyzed.reduce((s: number, a: typeof analyzed[number]) => s + a.analysis.irr, 0) / analyzed.length : 0
-  const totalValue = projects.reduce((s: number, p: typeof projects[number]) => s + p.purchasePrice + p.constructionCost, 0)
+  type Analyzed = typeof analyzed[number]
+
+  const goCount = analyzed.filter((a: Analyzed) => a.feasibility.flag === 'GO').length
+  const avgIRR = analyzed.length > 0 ? analyzed.reduce((s: number, a: Analyzed) => s + a.analysis.irr, 0) / analyzed.length : 0
+  const totalValue = projects.reduce((s: number, p: Project) => s + p.purchasePrice + p.constructionCost, 0)
 
   return (
     <div className="fade-in">
@@ -103,7 +106,7 @@ export default async function ADUPage() {
                 </tr>
               </thead>
               <tbody>
-                {analyzed.map(({ project, feasibility, analysis }) => (
+                {analyzed.map(({ project, feasibility, analysis }: Analyzed) => (
                   <tr key={project.id}>
                     <td>
                       <Link href={`/adu/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
