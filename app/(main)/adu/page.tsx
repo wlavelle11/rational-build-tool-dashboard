@@ -42,9 +42,9 @@ export default async function ADUPage() {
     return { project: p, feasibility, analysis }
   })
 
-  const goCount = analyzed.filter(a => a.feasibility.flag === 'GO').length
-  const avgIRR = analyzed.length > 0 ? analyzed.reduce((s, a) => s + a.analysis.irr, 0) / analyzed.length : 0
-  const totalValue = projects.reduce((s, p) => s + p.purchasePrice + p.constructionCost, 0)
+  const goCount = analyzed.filter((a: typeof analyzed[number]) => a.feasibility.flag === 'GO').length
+  const avgIRR = analyzed.length > 0 ? analyzed.reduce((s: number, a: typeof analyzed[number]) => s + a.analysis.irr, 0) / analyzed.length : 0
+  const totalValue = projects.reduce((s: number, p: typeof projects[number]) => s + p.purchasePrice + p.constructionCost, 0)
 
   return (
     <div className="fade-in">
