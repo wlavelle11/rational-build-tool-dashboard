@@ -8,16 +8,23 @@ export async function middleware(req: NextRequest) {
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/leads') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico'
   ) {
     return NextResponse.next()
   }
 
+  // Pipeline ingest: POST /api/leads authenticates via x-api-key in the route handler
+  if (pathname === '/api/leads' && req.method === 'POST') {
+    return NextResponse.next()
+  }
+
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 
   if (!token) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const loginUrl = new URL('/login', req.url)
     return NextResponse.redirect(loginUrl)
   }

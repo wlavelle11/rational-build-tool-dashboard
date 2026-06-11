@@ -12,6 +12,13 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  // Enforced once PIPELINE_API_KEY is set in the environment; open until then
+  // so the pipeline keeps syncing while the key is rolled out to both sides.
+  const apiKey = process.env.PIPELINE_API_KEY
+  if (apiKey && req.headers.get('x-api-key') !== apiKey) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await req.json()
     const records: unknown[] = Array.isArray(body) ? body : (body.leads ?? [])
