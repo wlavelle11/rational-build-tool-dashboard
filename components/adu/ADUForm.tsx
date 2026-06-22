@@ -115,14 +115,14 @@ function UtilityToggle({ label, value, onChange }: { label: string; value: strin
   )
 }
 
-export function ADUForm({ projectId }: { projectId?: string }) {
+export function ADUForm({ projectId, defaultValues }: { projectId?: string; defaultValues?: Partial<FormValues> }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'feasibility' | 'analysis'>('feasibility')
   const [saving, setSaving] = useState(false)
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState<string | null>(null)
 
-  const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({ defaultValues: DEFAULTS })
+  const { register, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({ defaultValues: { ...DEFAULTS, ...defaultValues } })
   const values = watch()
 
   const feasibility: FeasibilityResult = (() => {
